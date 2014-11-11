@@ -1,0 +1,59 @@
+name:                silk-db-opaleye
+version:             0.1.0.0
+license:             OtherLicense
+synopsis:            Wrapper over Opaleye
+description:         Wrapper over Opaleye
+author:              Silk B.V.
+maintainer:          code@silk.co
+copyright:           2014 Silk B.V.
+category:            Silk
+build-type:          Simple
+cabal-version:       >=1.10
+
+library
+  default-language:  Haskell2010
+  ghc-options:       -Wall
+  hs-source-dirs:    src
+  exposed-modules:
+    Silk.Opaleye
+    Silk.Opaleye.Instances
+    Silk.Opaleye.Json
+    Silk.Opaleye.Range
+    Silk.Opaleye.Run
+    Silk.Opaleye.TH
+    Silk.Opaleye.Compat
+    Silk.Opaleye.TH.Column
+    Silk.Opaleye.TH.Table
+    Silk.Opaleye.TH.Util
+    Silk.Opaleye.Transaction
+    Silk.Opaleye.TypeFams
+  other-modules:
+  build-depends:
+      base >= 4.6 && < 4.8
+    , aeson >= 0.7.0.6 && < 0.9
+    , aeson-utils == 0.2.*
+    , bytestring == 0.10.*
+    , case-insensitive == 1.2.*
+    , contravariant == 1.2.*
+    , convertible >= 1.0 && < 1.2
+    , fclabels >= 1.0 && < 2.1
+    , hslogger >= 1.1 && < 1.3
+    , monad-control == 0.3.*
+    , mtl >= 2.0 && < 2.2
+    , old-locale == 1.0.*
+    , opaleye == 0.2.*
+    , postgresql-simple >= 0.4.8 && < 0.5
+    , product-profunctors == 0.5
+    , profunctors == 4.2.*
+    -- Crashing bug when combining resource-pool-0.2.2.0 and HDBC-postgresql
+    , resource-pool >= 0.2 && < 0.2.2
+    , safe == 0.3.*
+    , string-conversions == 0.3.*
+    , tagged == 0.7.*
+    , template-haskell == 2.9.*
+    , text >= 0.11 && < 1.3
+    , time >= 1.1 && < 1.5
+    , transformers >= 0.3 && < 0.4
+    , transformers-base == 0.4.*
+    , uniplate == 1.6.*
+    , uuid == 1.3.*
