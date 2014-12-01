@@ -155,7 +155,7 @@ runQueryFirst = fmap headMay . runQuery
 
 -- | Convert an opaleye result to a separate type.
 --
--- Also has a default implementation for the identity conversions so
+-- Also has a default implementation for the identity conversion so
 -- both domain and database functions can use query functions in
 -- the same way.
 class Conv d where
