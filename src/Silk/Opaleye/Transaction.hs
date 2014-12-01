@@ -13,7 +13,7 @@
   #-}
 -- | Composable transactions inside monad stacks.
 --
--- TODO since Q has to be at the bottom (like IO typicall is) we may
+-- TODO since Q has to be at the bottom (like IO typically is) we may
 -- be able to use MonadBaseControl to avoid re-wrapping stacks.
 --
 -- A function with a Transaction constraint can be composed with others to form a larger transaction.
