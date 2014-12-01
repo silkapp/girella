@@ -20,8 +20,6 @@ type instance To x (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o) = (x a,x b,x c,x d,x e,x f,x 
 type instance To x (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) = (x a,x b,x c,x d,x e,x f,x g,x h,x i,x j,x k,x l,x m,x n,x o,x p)
 type instance To x (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q) = (x a,x b,x c,x d,x e,x f,x g,x h,x i,x j,x k,x l,x m,x n,x o,x p,x q)
 
-type family Ins a :: *
-
 type family MapTo (t :: * -> *) a :: *
 
 type instance MapTo x (a,b) = (To x a,To x b)
