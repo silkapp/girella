@@ -1,8 +1,10 @@
 {-# LANGUAGE TypeFamilies #-}
 module Silk.Opaleye.TypeFams where
 
+-- | Allows you to write To Column Person instead of Person (Column a) (Column b) [..]
 type family To (a :: * -> *) (b :: *) :: *
 
+-- These instances can be used if you want to use plain tuples instead of specific data types for queries. Not recommended.
 type instance To x (a,b) = (x a,x b)
 type instance To x (a,b,c) = (x a,x b,x c)
 type instance To x (a,b,c,d) = (x a,x b,x c,x d)
@@ -20,6 +22,7 @@ type instance To x (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o) = (x a,x b,x c,x d,x e,x f,x 
 type instance To x (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p) = (x a,x b,x c,x d,x e,x f,x g,x h,x i,x j,x k,x l,x m,x n,x o,x p)
 type instance To x (a,b,c,d,e,f,g,h,i,j,k,l,m,n,o,p,q) = (x a,x b,x c,x d,x e,x f,x g,x h,x i,x j,x k,x l,x m,x n,x o,x p,x q)
 
+-- MapTo x (y,z) is just a convenience for (To x y, To x z) and isn't that useful. Might be removed.
 type family MapTo (t :: * -> *) a :: *
 
 type instance MapTo x (a,b) = (To x a,To x b)
