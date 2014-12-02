@@ -17,7 +17,7 @@
 -- be able to use MonadBaseControl to avoid re-wrapping stacks.
 --
 -- A function with a Transaction constraint can be composed with others to form a larger transaction.
--- A Database constraint indicates a complete transaction and can not be composed with others into a single transaction.
+-- A MonadPool constraint indicates a complete transaction and can not be composed with others into a single transaction.
 module Silk.Opaleye.Transaction where
 
 import Control.Applicative
@@ -89,16 +89,16 @@ runTransaction' q p = runT q p (withRetry 1)
        . flip runReaderT conn
        . unQ $ t
 
-class (Functor m, Monad m) => Database m where
+class (Functor m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
-instance Database m => Database (ReaderT r m) where
+instance MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
 
-instance Database (ReaderT (Pool Connection) IO) where
+instance MonadPool (ReaderT (Pool Connection) IO) where
   runTransaction t = ask >>= lift . runTransaction' t
 
-instance (Error e, Database m) => Database (ErrorT e m) where
+instance (Error e, MonadPool m) => MonadPool (ErrorT e m) where
   runTransaction = lift . runTransaction
 
 runPoolReader :: ConnectInfo -> ReaderT (Pool Connection) IO b -> IO b

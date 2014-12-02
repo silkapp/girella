@@ -88,5 +88,5 @@ insertAndSelectAll n a mg = do
   runQuery queryAll
 
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
-runInsertAndSelectAll :: Database m => String -> Int -> Maybe Gender -> m [PersonH]
+runInsertAndSelectAll :: MonadPool => String -> Int -> Maybe Gender -> m [PersonH]
 runInsertAndSelectAll n a mg = runTransaction $ insertAndSelectAll n a mg

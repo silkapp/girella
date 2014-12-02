@@ -1,6 +1,6 @@
 -- Module used from code that only runs predefined db actions.
 module Silk.Opaleye.Run
-  ( Database
+  ( MonadPool
   , runTransaction
   ) where
 
