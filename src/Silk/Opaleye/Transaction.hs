@@ -28,10 +28,9 @@ import Control.Monad.State (StateT)
 import Control.Monad.Trans
 import Control.Monad.Trans.Identity (IdentityT)
 import Control.Monad.Writer (WriterT)
-import Data.Maybe
 import Data.Monoid
 import Data.Pool (Pool, createPool, withResource)
-import Database.PostgreSQL.Simple (ConnectInfo (..), Connection, defaultConnectInfo)
+import Database.PostgreSQL.Simple (ConnectInfo (..), Connection)
 import System.Log.Logger
 import qualified Database.PostgreSQL.Simple as PG
 
@@ -102,7 +101,7 @@ instance Database (ReaderT (Pool Connection) IO) where
 instance (Error e, Database m) => Database (ErrorT e m) where
   runTransaction = lift . runTransaction
 
-runPoolReader :: Config -> ReaderT (Pool Connection) IO b -> IO b
+runPoolReader :: ConnectInfo -> ReaderT (Pool Connection) IO b -> IO b
 runPoolReader cfg q = do
   pool <- createPGPool cfg
   runReaderT q pool
@@ -110,29 +109,5 @@ runPoolReader cfg q = do
 usePool :: MonadIO m => Pool Connection -> (Connection -> IO a) -> m a
 usePool p f = liftIO $ withResource p f
 
-createPGPool :: Config -> IO (Pool Connection)
-createPGPool config = createPool (connect' config) disconnect' 10 5 10
-  where
-    connect' :: Config -> IO Connection
-    connect' x = PG.connect . connectInfo $ x
-    disconnect' :: Connection -> IO ()
-    disconnect' x = PG.close x
-
-data Config = Config
-  { name    :: String
-  , user    :: String
-  , pass    :: String
-  , host    :: Maybe String
-  , port    :: Maybe Int
-  , traceId :: Maybe String
-  } deriving Show
-
-connectInfo :: Config -> ConnectInfo
-connectInfo config =
-  ConnectInfo
-    { connectHost     = fromMaybe (connectHost defaultConnectInfo)          $ host config
-    , connectPort     = maybe (connectPort defaultConnectInfo) fromIntegral $ port config
-    , connectUser     = user config
-    , connectPassword = pass config
-    , connectDatabase = name config
-    }
+createPGPool :: ConnectInfo -> IO (Pool Connection)
+createPGPool connectInfo = createPool (PG.connect connectInfo) PG.close 10 5 10
