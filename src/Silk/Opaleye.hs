@@ -13,7 +13,8 @@
   , TypeFamilies
   #-}
 module Silk.Opaleye
-  ( module Silk.Opaleye
+  ( module Control.Arrow
+  , module Silk.Opaleye
   , module Silk.Opaleye.Compat
   , module Silk.Opaleye.Transaction
   , module Silk.Opaleye.TypeFams
