@@ -171,10 +171,17 @@ instance Conv a => Conv [a] where
 
 -- | Composable version of restrict
 where_ :: (b -> Column Bool) -> QueryArr b b
-where_ p = restrict . toQueryArrDef p *> id
+where_ p = restrict . arr p *> id
 
 whereEq :: (b1 -> Column b0) -> (b2 -> Column b0) -> QueryArr (b1,b2) (b1,b2)
 whereEq f g = where_ (arr (f . fst) .==. arr (g . snd))
+
+innerJoin :: (columnsA -> Column a) -> (columnsB -> Column a) -> Query columnsB -> QueryArr columnsA columnsB
+innerJoin joinA joinB queryB =
+  proc columnsA -> do
+    columnsB <- queryB -< ()
+    restrict . arr (\(a,b) -> joinA a .== joinB b) -< (columnsA, columnsB)
+    id -< columnsB
 
 -- Query helpers
 
