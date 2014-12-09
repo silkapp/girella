@@ -177,8 +177,8 @@ where_ p = restrict . arr p *> id
 whereEq :: (b1 -> Column b0) -> (b2 -> Column b0) -> QueryArr (b1,b2) (b1,b2)
 whereEq f g = where_ (arr (f . fst) .==. arr (g . snd))
 
-innerJoin :: (columnsA -> Column a) -> (columnsB -> Column a) -> Query columnsB -> QueryArr columnsA columnsB
-innerJoin joinA joinB queryB =
+innerJoin :: Query columnsB -> (columnsB -> Column a) -> (columnsA -> Column a) -> QueryArr columnsA columnsB
+innerJoin queryB joinB joinA =
   proc columnsA -> do
     columnsB <- queryB -< ()
     restrict . arr (\(a,b) -> joinA a .== joinB b) -< (columnsA, columnsB)
