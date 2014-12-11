@@ -253,5 +253,19 @@ trd4 (_,_,c,_) = c
 fth4 :: (a,b,c,d) -> d
 fth4 (_,_,_,d) = d
 
+fst5 :: (a,b,c,d,e) -> a
+fst5 (a,_,_,_,_) = a
+snd5 :: (a,b,c,d,e) -> b
+snd5 (_,b,_,_,_) = b
+trd5 :: (a,b,c,d,e) -> c
+trd5 (_,_,c,_,_) = c
+fth5 :: (a,b,c,d,e) -> d
+fth5 (_,_,_,d,_) = d
+fft5 :: (a,b,c,d,e) -> e
+fft5 (_,_,_,_,e) = e
+
+flatten3 :: ((a, b), c) -> (a, b, c)
+flatten3 ((x, y), z) = (x, y, z)
+
 uuidText :: UUID -> Text
 uuidText = T.pack . UUID.toString
