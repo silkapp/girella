@@ -184,6 +184,12 @@ innerJoin queryB joinB joinA =
     restrict . arr (\(a,b) -> joinA a .== joinB b) -< (columnsA, columnsB)
     id -< columnsB
 
+innerJoinOn :: Query columnsA -> (columnsA -> Column a) -> QueryArr (Column a) columnsA
+innerJoinOn q column = proc a -> do
+  q' <- q -< ()
+  restrict -< column q' .== a
+  id -< q'
+
 -- Query helpers
 
 ors :: Foldable f => f (Column Bool) -> Column Bool
