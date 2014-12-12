@@ -18,6 +18,7 @@ module Silk.Opaleye
   , module Silk.Opaleye.Compat
   , module Silk.Opaleye.Transaction
   , module Silk.Opaleye.TypeFams
+  , module Opaleye.PGTypes
   , (.&&)
   , (.==)
   , (./=)
@@ -39,7 +40,6 @@ module Silk.Opaleye
   , aggregate
   , asc
   , boolOr
-  , constant
   , contramap
   , count
   , desc
@@ -79,11 +79,11 @@ import qualified Data.UUID as UUID
 import Data.Profunctor.Product.Default
 import Opaleye.Aggregate
 import Opaleye.Column
-import Opaleye.Internal.Column (constant)
 import Opaleye.Join (leftJoin)
 import Opaleye.Manipulation (Unpackspec)
 import Opaleye.Operators
 import Opaleye.Order
+import Opaleye.PGTypes
 import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
 import Opaleye.Table
@@ -127,16 +127,16 @@ runQueryInternal q = liftQ . Q $ do
   conn <- ask
   liftIO $ M.runQuery conn $ q
 
-runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column Bool) -> m Int64
+runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column PGBool) -> m Int64
 runUpdate tab upd cond = liftQ $ do
   conn <- ask
   unsafeIOToQ $ M.runUpdate conn tab upd cond
 
 -- | Update without using the current values
-runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column Bool) -> m Int64
+runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column PGBool) -> m Int64
 runUpdateConst tab me cond = runUpdate tab (const me) cond
 
-runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column Bool) -> m Int64
+runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column PGBool) -> m Int64
 runDelete tab e = liftQ $ do
   conn <- ask
   unsafeIOToQ $ M.runDelete conn tab e
@@ -171,7 +171,7 @@ instance Conv a => Conv [a] where
   conv = fmap conv
 
 -- | Composable version of restrict
-where_ :: (b -> Column Bool) -> QueryArr b b
+where_ :: (b -> Column PGBool) -> QueryArr b b
 where_ p = restrict . arr p *> id
 
 whereEq :: (b1 -> Column b0) -> (b2 -> Column b0) -> QueryArr (b1,b2) (b1,b2)
@@ -193,16 +193,16 @@ innerJoinOn q column = proc a -> do
 
 -- Query helpers
 
-ors :: Foldable f => f (Column Bool) -> Column Bool
+ors :: Foldable f => f (Column PGBool) -> Column PGBool
 ors = foldr (.||) (constant False)
 
-ands :: Foldable f => f (Column Bool) -> Column Bool
+ands :: Foldable f => f (Column PGBool) -> Column PGBool
 ands = foldr (.&&) (constant True)
 
-inE :: ShowConstant h => [Column h] -> Column h -> Column Bool
+inE :: [Column o] -> Column o -> Column PGBool
 inE hs w = ors . map (w .==) $ hs
 
-notIn :: ShowConstant h => [Column h] -> Column h -> Column Bool
+notIn :: [Column a] -> Column a -> Column PGBool
 notIn hs w = ands . map (w ./=) $ hs
 
 mrange :: Maybe Range -> Query a -> Query a
@@ -217,7 +217,7 @@ sumInt64 = L.sum
 
 -- Avoiding clashes with prelude
 
-eNot :: Column Bool -> Column Bool
+eNot :: Column PGBool -> Column PGBool
 eNot = O.not
 
 eNull :: Column (Nullable a)
@@ -225,16 +225,16 @@ eNull = C.null
 
 -- Implicit calls to ShowConstant
 
-nullable :: ShowConstant a => a -> Column (Nullable a)
+nullable :: (ShowConstant a) => a -> Column (Nullable (PGRep a))
 nullable = toNullable . constant
 
-constantE :: ShowConstant a => a -> x -> Column a
+constantE :: (ShowConstant a, b ~ PGRep a) => a -> x -> Column b
 constantE = const . constant
 
-maybeToNullable :: ShowConstant a => Maybe a -> Column (Nullable a)
+maybeToNullable :: (ShowConstant a, b ~ PGRep a) => Maybe a -> Column (Nullable b)
 maybeToNullable = maybe eNull nullable
 
-fromNullable :: ShowConstant a => a -> Column (Nullable a) -> Column a
+fromNullable :: (ShowConstant a, b ~ PGRep a) => a -> Column (Nullable b) -> Column b
 fromNullable a c = C.fromNullable (constant a) c
 
 -- Unsafe and pretty crappy

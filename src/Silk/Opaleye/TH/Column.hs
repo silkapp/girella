@@ -8,9 +8,9 @@ module Silk.Opaleye.TH.Column
     -- * Re-exported TH dependencies
   , Typeable
   , Default (def)
-  , ShowConstant (showConstant)
+  , ShowConstant (..)
   , FromField (fromField)
-  , QueryRunnerColumn
+  , QueryRunnerColumnDefault (..)
   , Nullable
   , Column
   , fieldQueryRunnerColumn
@@ -25,10 +25,11 @@ import Data.String.Conversions
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..), returnError)
 import Language.Haskell.TH
 import Opaleye.Column
-import Opaleye.Internal.HaskellDB.Query (ShowConstant (..))
+import Opaleye.Internal.RunQuery
 import Opaleye.RunQuery (QueryRunnerColumn, fieldQueryRunnerColumn)
 
 import Silk.Opaleye.Instances ()
+import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util
 
 -- TODO This assumes the destructor is named unId, can be changed to a pattern match.
@@ -48,7 +49,7 @@ mkId = return . either error id <=< f <=< reify
     g :: Name -> Name -> Type -> Q [Dec]
     g tyName _conName innerTy = do
       let x = [unsafeIdSig, unsafeId, unsafeIdSig', unsafeId']
-      y <- makeColumnInstances tyName (mkName "unId") (mkName "unsafeId'")
+      y <- makeColumnInstancesInternal tyName innerTy (mkName "unId") (mkName "unsafeId'")
       return $ x ++ y
       where
         unsafeIdSig, unsafeId, unsafeIdSig', unsafeId' :: Dec
@@ -58,8 +59,12 @@ mkId = return . either error id <=< f <=< reify
         unsafeId' = plainFun (mkName "unsafeId'") $ VarE (mkName ".") `AppE` ConE (mkName "Just") `AppE` ConE (mkName "Id")
         plainFun n e = FunD n [Clause [] (NormalB e) []]
 
-makeColumnInstances :: Name -> Name -> Name -> Q [Dec]
-makeColumnInstances tyName toDb fromDb = return [fromFld, showConst, queryRunnerColumn]
+makeColumnInstances :: Name -> Name -> Name -> Name -> Q [Dec]
+makeColumnInstances tyName innerTyName toDb fromDb = makeColumnInstancesInternal tyName (ConT innerTyName) toDb fromDb
+
+makeColumnInstancesInternal :: Name -> Type -> Name -> Name -> Q [Dec]
+makeColumnInstancesInternal tyName innerTy toDb fromDb =
+    return [fromFld, showConst, queryRunnerColumn]
   where
     fromFld
       = InstanceD [] (ConT (mkName "FromField") `AppT` ConT tyName)
@@ -68,14 +73,17 @@ makeColumnInstances tyName toDb fromDb = return [fromFld, showConst, queryRunner
                   ]
     showConst
       = InstanceD [] (ConT (mkName "ShowConstant") `AppT` ConT tyName)
-                  [ FunD (mkName "showConstant")
-                    [ Clause [] (NormalB $ VarE (mkName ".") `AppE` VarE (mkName "showConstant") `AppE` VarE toDb) [] ]
+                  [ TySynInstD (mkName "PGRep") (TySynEqn [ConT tyName] (ConT (mkName "PGRep") `AppT` innerTy))
+                  , FunD (mkName "constant")
+                      [ Clause [] (NormalB $ VarE (mkName ".") `AppE` VarE (mkName "constant") `AppE` VarE toDb) [] ]
                   ]
     queryRunnerColumn
-      = InstanceD [] (ConT (mkName "Default") `AppT` ConT (mkName "QueryRunnerColumn") `AppT` ConT tyName `AppT` ConT tyName)
+      = InstanceD [EqualP (ConT (mkName "PGRep") `AppT` ConT tyName) tyVar] (ConT (mkName "QueryRunnerColumnDefault") `AppT` tyVar `AppT` ConT tyName)
                  queryRunnerBody
+      where
+        tyVar = VarT $ mkName "a"
     queryRunnerBody = qr "fieldQueryRunnerColumn"
-    qr q = [ FunD (mkName "def") [ Clause [] (NormalB $ VarE $ mkName q) [] ] ]
+    qr q = [ FunD (mkName "queryRunnerColumnDefault") [ Clause [] (NormalB $ VarE $ mkName q) [] ] ]
 
 
 -- nullableFieldQueryRunnerColumn :: FromField a => QueryRunnerColumn (Column (Nullable a)) (Maybe a)

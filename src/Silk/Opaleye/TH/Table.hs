@@ -53,6 +53,12 @@ makeType = \case
       tvars = map (simpleName . (:[])) $ take (length vtys) ['a'..'z']
       ttys :: [Type]
       ttys = map (\(_,_,tp) -> tp) vtys
+      ttysO :: [Type]
+      ttysO = map pgRep ttys
+        where
+          pgRep = \case
+            n@(ConT (Name (OccName "Nullable") _)) `AppT` i -> n `AppT` (ConT (mkName "PGRep") `AppT` i)
+            i                                        -> (ConT (mkName "PGRep") `AppT` i)
       ttysH :: [Type]
       ttysH = map replaceNullable ttys
         where
@@ -66,7 +72,7 @@ makeType = \case
           f :: Name -> VarStrictType -> VarStrictType
           f c (n,s,_) = (ambiguateName n, s, VarT c)
 
-      aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) $ ttys
+      aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) $ ttysO
       aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) $ ttysH
 
       toInstance = TySynInstD (simpleName "To")

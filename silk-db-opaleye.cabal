@@ -21,6 +21,7 @@ library
     Silk.Opaleye.Range
     Silk.Opaleye.Run
     Silk.Opaleye.TH
+    Silk.Opaleye.ShowConstant
     Silk.Opaleye.Compat
     Silk.Opaleye.TH.Column
     Silk.Opaleye.TH.Table
@@ -40,7 +41,7 @@ library
     , hslogger >= 1.1 && < 1.3
     , monad-control == 0.3.*
     , mtl >= 2.0 && < 2.2
-    , opaleye == 0.2.*
+    , opaleye == 0.3.*
     , postgresql-simple >= 0.4.8 && < 0.5
     , product-profunctors == 0.5
     , profunctors == 4.2.*
@@ -51,6 +52,7 @@ library
     , tagged == 0.7.*
     , template-haskell == 2.9.*
     , text >= 0.11 && < 1.3
+    , time == 1.4.*
     , transformers >= 0.3 && < 0.4
     , transformers-base == 0.4.*
     , uniplate == 1.6.*
