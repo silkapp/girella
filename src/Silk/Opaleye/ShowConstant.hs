@@ -10,13 +10,11 @@ import Data.CaseInsensitive (CI)
 import Data.Int (Int64)
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
-import qualified Data.CaseInsensitive as CI
 import qualified Data.Text            as S
 import qualified Data.Text.Lazy       as L
 
-import Opaleye.Column (Column, Nullable)
+import Opaleye.Column (Column)
 import Opaleye.PGTypes
-import qualified Opaleye.Column as C
 
 class ShowConstant h where
   type PGRep h :: *
@@ -34,8 +32,8 @@ instance ShowConstant Day         where type PGRep Day         = PGDate        ;
 instance ShowConstant UTCTime     where type PGRep UTCTime     = PGTimestamptz ; constant = pgUTCTime
 instance ShowConstant LocalTime   where type PGRep LocalTime   = PGTimestamp   ; constant = pgLocalTime
 instance ShowConstant TimeOfDay   where type PGRep TimeOfDay   = PGTime        ; constant = pgTimeOfDay
-instance ShowConstant (CI S.Text) where type PGRep (CI S.Text) = PGCiText      ; constant = pgCiStrictText
-instance ShowConstant (CI L.Text) where type PGRep (CI L.Text) = PGCiText      ; constant = pgCiLazyText
+instance ShowConstant (CI S.Text) where type PGRep (CI S.Text) = PGCitext      ; constant = pgCiStrictText
+instance ShowConstant (CI L.Text) where type PGRep (CI L.Text) = PGCitext      ; constant = pgCiLazyText
 
 
 showConstant :: ShowConstant h => h -> Column (PGRep h)
