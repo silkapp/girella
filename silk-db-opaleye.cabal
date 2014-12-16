@@ -16,7 +16,6 @@ library
   hs-source-dirs:    src
   exposed-modules:
     Silk.Opaleye
-    Silk.Opaleye.Instances
     Silk.Opaleye.Json
     Silk.Opaleye.Range
     Silk.Opaleye.Run

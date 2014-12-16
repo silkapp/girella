@@ -16,7 +16,6 @@ import Data.Aeson.Utils
 import Data.String.Conversions
 import Data.Text (Text)
 
-import Silk.Opaleye.Instances ()
 import Silk.Opaleye.TH
 
 newtype Json = Json { unJson :: Value }

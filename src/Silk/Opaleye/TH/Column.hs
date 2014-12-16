@@ -26,9 +26,7 @@ import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), 
 import Language.Haskell.TH
 import Opaleye.Column
 import Opaleye.Internal.RunQuery
-import Opaleye.RunQuery (QueryRunnerColumn, fieldQueryRunnerColumn)
 
-import Silk.Opaleye.Instances ()
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util
 

@@ -93,7 +93,6 @@ import qualified Opaleye.Operators    as O
 import qualified Opaleye.RunQuery     as M (runQuery)
 
 import Silk.Opaleye.Compat
-import Silk.Opaleye.Instances ()
 import Silk.Opaleye.Range (Range)
 import Silk.Opaleye.TH
 import Silk.Opaleye.Transaction

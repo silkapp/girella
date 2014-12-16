@@ -29,7 +29,6 @@ import Language.Haskell.TH.Syntax
 import Opaleye.Column
 import Opaleye.Table
 
-import Silk.Opaleye.Instances ()
 import Silk.Opaleye.TH.Util
 import Silk.Opaleye.TypeFams
 
