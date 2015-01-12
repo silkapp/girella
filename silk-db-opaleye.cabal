@@ -21,7 +21,6 @@ library
     Silk.Opaleye.Run
     Silk.Opaleye.TH
     Silk.Opaleye.ShowConstant
-    Silk.Opaleye.Compat
     Silk.Opaleye.TH.Column
     Silk.Opaleye.TH.Table
     Silk.Opaleye.TH.Util

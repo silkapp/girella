@@ -15,7 +15,6 @@
 module Silk.Opaleye
   ( module Control.Arrow
   , module Silk.Opaleye
-  , module Silk.Opaleye.Compat
   , module Silk.Opaleye.Transaction
   , module Silk.Opaleye.TypeFams
   , module Opaleye.PGTypes
@@ -92,7 +91,6 @@ import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertRetur
 import qualified Opaleye.Operators    as O
 import qualified Opaleye.RunQuery     as M (runQuery)
 
-import Silk.Opaleye.Compat
 import Silk.Opaleye.Range (Range)
 import Silk.Opaleye.TH
 import Silk.Opaleye.Transaction
@@ -174,7 +172,7 @@ where_ :: (b -> Column PGBool) -> QueryArr b b
 where_ p = restrict . arr p *> id
 
 whereEq :: (b1 -> Column b0) -> (b2 -> Column b0) -> QueryArr (b1,b2) (b1,b2)
-whereEq f g = where_ (arr (f . fst) .==. arr (g . snd))
+whereEq f g = where_ (\(a,b) -> f a .== g b)
 
 {-# DEPRECATED innerJoin "Use innerJoinOn" #-}
 innerJoin :: Query columnsB -> (columnsB -> Column a) -> (columnsA -> Column a) -> QueryArr columnsA columnsB
@@ -226,9 +224,6 @@ eNull = C.null
 
 nullable :: (ShowConstant a) => a -> Column (Nullable (PGRep a))
 nullable = toNullable . constant
-
-constantE :: (ShowConstant a, b ~ PGRep a) => a -> x -> Column b
-constantE = const . constant
 
 maybeToNullable :: (ShowConstant a, b ~ PGRep a) => Maybe a -> Column (Nullable b)
 maybeToNullable = maybe eNull nullable
