@@ -3,7 +3,6 @@ module Silk.Opaleye.TH.Column
     mkId
   , makeColumnInstances
     -- * TH dependencies defined here
---  , nullableFieldQueryRunnerColumn
   , fromFieldAux
     -- * Re-exported TH dependencies
   , Typeable
@@ -82,10 +81,6 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb =
         tyVar = VarT $ mkName "a"
     queryRunnerBody = qr "fieldQueryRunnerColumn"
     qr q = [ FunD (mkName "queryRunnerColumnDefault") [ Clause [] (NormalB $ VarE $ mkName q) [] ] ]
-
-
--- nullableFieldQueryRunnerColumn :: FromField a => QueryRunnerColumn (Column (Nullable a)) (Maybe a)
--- nullableFieldQueryRunnerColumn = lmap unsafeCoerce fieldQueryRunnerColumn
 
 fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe ByteString -> Conversion b
 fromFieldAux fromDb f mdata = case mdata of
