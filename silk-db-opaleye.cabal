@@ -30,7 +30,7 @@ library
   build-depends:
       base >= 4.6 && < 4.8
     , aeson >= 0.7.0.6 && < 0.9
-    , aeson-utils == 0.2.*
+    , aeson-utils >= 0.2 && < 0.4
     , bytestring == 0.10.*
     , case-insensitive == 1.2.*
     , contravariant == 1.2.*
