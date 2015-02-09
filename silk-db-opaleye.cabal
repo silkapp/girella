@@ -1,5 +1,5 @@
 name:                silk-db-opaleye
-version:             0.1.0.1
+version:             0.1.0.2
 license:             OtherLicense
 synopsis:            Wrapper over Opaleye
 description:         Wrapper over Opaleye
