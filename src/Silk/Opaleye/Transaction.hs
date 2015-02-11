@@ -1,4 +1,4 @@
-{-# OPTIONS -fno-warn-orphans #-}
+{-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
     DeriveFunctor
   , FlexibleContexts
@@ -22,6 +22,7 @@ module Silk.Opaleye.Transaction where
 
 import Control.Applicative
 import Control.Exception
+import Control.Monad.Error
 import Control.Monad.Except (ExceptT)
 import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
 import Control.Monad.State (StateT)
@@ -39,6 +40,9 @@ class (Functor m, Monad m) => Transaction m where
 
 instance Transaction Q where
   liftQ = id
+
+instance (Transaction m, Error e) => Transaction (ErrorT e m) where
+  liftQ = lift . liftQ
 
 instance Transaction m => Transaction (ExceptT e m) where
   liftQ = lift . liftQ
@@ -97,6 +101,9 @@ instance MonadPool m => MonadPool (ReaderT r m) where
 
 instance MonadPool (ReaderT (Pool Connection) IO) where
   runTransaction t = ask >>= lift . runTransaction' t
+
+instance (MonadPool m, Error e) => MonadPool (ErrorT e m) where
+  runTransaction = lift . runTransaction
 
 instance MonadPool m => MonadPool (ExceptT e m) where
   runTransaction = lift . runTransaction
