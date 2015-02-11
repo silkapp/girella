@@ -22,7 +22,7 @@ module Silk.Opaleye.Transaction where
 
 import Control.Applicative
 import Control.Exception
-import Control.Monad.Error (Error, ErrorT)
+import Control.Monad.Except (ExceptT)
 import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
 import Control.Monad.State (StateT)
 import Control.Monad.Trans
@@ -40,7 +40,7 @@ class (Functor m, Monad m) => Transaction m where
 instance Transaction Q where
   liftQ = id
 
-instance (Transaction m, Error e) => Transaction (ErrorT e m) where
+instance Transaction m => Transaction (ExceptT e m) where
   liftQ = lift . liftQ
 
 instance Transaction m => Transaction (ReaderT r m) where
@@ -98,7 +98,7 @@ instance MonadPool m => MonadPool (ReaderT r m) where
 instance MonadPool (ReaderT (Pool Connection) IO) where
   runTransaction t = ask >>= lift . runTransaction' t
 
-instance (Error e, MonadPool m) => MonadPool (ErrorT e m) where
+instance MonadPool m => MonadPool (ExceptT e m) where
   runTransaction = lift . runTransaction
 
 runPoolReader :: ConnectInfo -> ReaderT (Pool Connection) IO b -> IO b
