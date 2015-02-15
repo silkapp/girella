@@ -22,13 +22,15 @@ module Silk.Opaleye.Transaction where
 
 import Control.Applicative
 import Control.Exception
-import Control.Monad.Error
-import Control.Monad.Except (ExceptT)
+import Control.Monad.Error.Class (Error)
+import Control.Monad.IO.Class (MonadIO, liftIO)
 import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
-import Control.Monad.State (StateT)
-import Control.Monad.Trans
+import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans.Error (ErrorT)
+import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Identity (IdentityT)
-import Control.Monad.Writer (WriterT)
+import Control.Monad.Trans.State (StateT)
+import Control.Monad.Trans.Writer (WriterT)
 import Data.Monoid
 import Data.Pool (Pool, createPool, withResource)
 import Database.PostgreSQL.Simple (ConnectInfo (..), Connection)
