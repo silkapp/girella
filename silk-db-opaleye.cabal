@@ -54,6 +54,6 @@ library
     , time == 1.4.*
     , transformers >= 0.3 && < 0.5
     , transformers-base == 0.4.*
-    , transformers-compat == 0.4.*
+    , transformers-compat >= 0.3 && < 0.5
     , uniplate == 1.6.*
     , uuid == 1.3.*
