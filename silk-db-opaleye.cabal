@@ -40,7 +40,7 @@ library
     , monad-control == 0.3.*
     , mtl >= 2.0 && < 2.3
     , mtl-compat >= 0.1 && < 0.3
-    , opaleye == 0.3.0.0.100
+    , opaleye >= 0.3.1 && < 0.4
     , postgresql-simple >= 0.4.8 && < 0.5
     , product-profunctors >= 0.5 && < 0.7
     , profunctors >= 4.2 && < 4.4
