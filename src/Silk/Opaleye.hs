@@ -16,18 +16,10 @@
 module Silk.Opaleye
   ( module Control.Arrow
   , module Silk.Opaleye
-  , module Silk.Opaleye.Range
   , module Silk.Opaleye.Transaction
   , module Silk.Opaleye.TypeFams
+  , module Silk.Opaleye.Range
   , module Opaleye.PGTypes
-  , (.&&)
-  , (.==)
-  , (./=)
-  , (.||)
-  , (.>)
-  , (.<)
-  , (.>=)
-  , (.<=)
   , Connection
   , Int64
   , Nullable
@@ -39,22 +31,17 @@ module Silk.Opaleye
   , ShowConstant (..)
   , aggregate
   , asc
-  , boolOr
   , contramap
   , count
   , desc
   , fieldQueryRunnerColumn
   , groupBy
-  , isNull
-  , leftJoin
   , lmap
-  , lower
   , matchNullable
   , orderBy
   , queryTable
   , required
   , toNullable
-  , unsafeCoerce
   ) where
 
 import Prelude hiding (foldr, id, (.))
@@ -65,36 +52,38 @@ import Control.Category (id, (.))
 import Control.Monad.Reader
 import Data.Foldable
 import Data.Functor.Contravariant (Contravariant (..))
+import Data.Int (Int64)
 import Data.Pool
 import Data.Profunctor
+import Data.Profunctor.Product.Default
 import Data.Text (Text)
 import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import Database.PostgreSQL.Simple (Connection)
-import GHC.Int (Int64)
 import Opaleye.Sql (showSqlForPostgres)
 import Safe
 import qualified Data.List as L (sum)
 import qualified Data.Text as T
 import qualified Data.UUID as UUID
 
-import Data.Profunctor.Product.Default
-import Opaleye.Aggregate
-import Opaleye.Column
-import Opaleye.Join (leftJoin)
+import Opaleye.Aggregate (Aggregator, aggregate, count, groupBy)
+import Opaleye.Column (matchNullable, toNullable, unsafeCast)
+import Opaleye.Internal.Join (NullMaker)
 import Opaleye.Manipulation (Unpackspec)
-import Opaleye.Operators
 import Opaleye.Order (Order, asc, desc, orderBy)
 import Opaleye.PGTypes
 import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
 import Opaleye.Table
+import qualified Opaleye.Aggregate    as A
 import qualified Opaleye.Column       as C
+import qualified Opaleye.Join         as J (leftJoin)
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
 import qualified Opaleye.Operators    as O
 import qualified Opaleye.RunQuery     as M (runQuery)
 
 import Silk.Opaleye.Range
+import Silk.Opaleye.ShowConstant
 import Silk.Opaleye.TH
 import Silk.Opaleye.Transaction
 import Silk.Opaleye.TypeFams
@@ -126,19 +115,19 @@ runQueryInternal q = liftQ . Q $ do
   conn <- ask
   liftIO $ M.runQuery conn $ q
 
-runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column PGBool) -> m Int64
+runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column Bool) -> m Int64
 runUpdate tab upd cond = liftQ $ do
   conn <- ask
-  unsafeIOToQ $ M.runUpdate conn tab upd cond
+  unsafeIOToQ $ M.runUpdate conn tab upd (toPGBool . cond)
 
 -- | Update without using the current values
-runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column PGBool) -> m Int64
+runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column Bool) -> m Int64
 runUpdateConst tab me cond = runUpdate tab (const me) cond
 
-runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column PGBool) -> m Int64
-runDelete tab e = liftQ $ do
+runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column Bool) -> m Int64
+runDelete tab cond = liftQ $ do
   conn <- ask
-  unsafeIOToQ $ M.runDelete conn tab e
+  unsafeIOToQ $ M.runDelete conn tab (toPGBool . cond)
 
 -- | Run a query and convert the result using Conv.
 runQuery :: ( Default QueryRunner columns haskells
@@ -180,46 +169,87 @@ instance Conv a => Conv [a] where
   conv = fmap conv
 
 -- | Composable version of restrict
-where_ :: (b -> Column PGBool) -> QueryArr b b
+where_ :: (a -> Column Bool) -> QueryArr a a
 where_ p = restrict . arr p *> id
 
-whereEq :: (b1 -> Column b0) -> (b2 -> Column b0) -> QueryArr (b1,b2) (b1,b2)
+whereEq :: ShowConstant a => (t -> Column a) -> (t1 -> Column a) -> QueryArr (t, t1) (t, t1)
 whereEq f g = where_ (\(a,b) -> f a .== g b)
 
-{-# DEPRECATED innerJoin "Use innerJoinOn" #-}
-innerJoin :: Query columnsB -> (columnsB -> Column a) -> (columnsA -> Column a) -> QueryArr columnsA columnsB
-innerJoin queryB joinB joinA =
-  proc columnsA -> do
-    columnsB <- queryB -< ()
-    restrict . arr (\(a,b) -> joinA a .== joinB b) -< (columnsA, columnsB)
-    id -< columnsB
-
-innerJoinOn :: Query columnsA -> (columnsA -> Column a) -> QueryArr (Column a) columnsA
+innerJoinOn :: QueryArr () a -> (a -> Column b) -> QueryArr (Column b) a
 innerJoinOn q column = proc a -> do
   q' <- q -< ()
-  restrict -< column q' .== a
+  O.restrict -< column q' O..== a
   id -< q'
+
+leftJoin ::
+  ( Default Unpackspec columnsA columnsA
+  , Default Unpackspec columnsB columnsB
+  , Default NullMaker columnsB nullableColumnsB
+  )
+  => Query columnsA -> Query columnsB
+  -> ((columnsA, columnsB) -> Column Bool)
+  -> Query (columnsA, nullableColumnsB)
+leftJoin a b f = J.leftJoin a b (toPGBool . f)
+
+-- Operators!
+
+infix 4 .==
+(.==) :: ShowConstant a => Column a -> Column a -> Column Bool
+a .== b = fromPGBool $ a O..== b
+infix 4 .==?
+(.==?) :: ShowConstant a => Column (Nullable a) -> Column (Nullable a) -> Column Bool
+a .==? b = fromPGBool $ a O..== b
+infix 4 ./=
+(./=) :: ShowConstant a => Column a -> Column a -> Column Bool
+a ./= b = fromPGBool $ a O../= b
+
+infixr 2 .||
+(.||) :: Column Bool -> Column Bool -> Column Bool
+a .|| b = fromPGBool $ toPGBool a O..|| toPGBool b
+infixr 3 .&&
+(.&&) :: Column Bool -> Column Bool -> Column Bool
+a .&& b = fromPGBool $ toPGBool a O..&& toPGBool b
+
+infix 4 .>
+(.>) :: TOrd a => Column a -> Column a -> Column Bool
+a .> b = fromPGBool $ a O..> b
+infix 4 .<
+(.<) :: TOrd a => Column a -> Column a -> Column Bool
+a .< b = fromPGBool $ a O..< b
+infix 4 .>=
+(.>=) :: TOrd a => Column a -> Column a -> Column Bool
+a .>= b = fromPGBool $ a O..>= b
+infix 4 .<=
+(.<=) :: TOrd a => Column a -> Column a -> Column Bool
+a .<= b = fromPGBool $ a O..<= b
+
+lower :: TString a => Column a -> Column a
+lower = unsafeCoerce . O.lower . unsafeCoerce
+
+restrict :: QueryArr (Column Bool) ()
+restrict = O.restrict . arr unsafeCoerce
 
 -- Query helpers
 
-ors :: Foldable f => f (Column PGBool) -> Column PGBool
-ors = foldr (.||) (constant False)
 
-ands :: Foldable f => f (Column PGBool) -> Column PGBool
-ands = foldr (.&&) (constant True)
+ors :: Foldable f => f (Column Bool) -> Column Bool
+ors = foldr (.||) (constant True)
 
-inE :: [Column o] -> Column o -> Column PGBool
+ands :: Foldable f => f (Column Bool) -> Column Bool
+ands = foldr (.&&) (constant False)
+
+inE :: ShowConstant o => [Column o] -> Column o -> Column Bool
 inE hs w = ors . map (w .==) $ hs
 
-notIn :: [Column a] -> Column a -> Column PGBool
-notIn hs w = ands . map (w ./=) $ hs
+notIn :: ShowConstant a => [Column a] -> Column a -> Column Bool
+notIn hs w = ands . map (./= w) $ hs
 
 data DateSlice
   = Before UTCTime
   | After UTCTime
   deriving (Eq, Show)
 
-dateSlice :: (a -> Column PGTimestamptz) -> Maybe DateSlice -> QueryArr a a
+dateSlice :: (a -> Column UTCTime) -> Maybe DateSlice -> QueryArr a a
 dateSlice dateCol mslice = case mslice of
   Nothing -> where_ (const $ constant True)
   Just (Before tb) -> where_ (\e -> dateCol e .< constant tb)
@@ -231,22 +261,30 @@ sumInt64 = L.sum
 
 -- Avoiding clashes with prelude
 
-eNot :: Column PGBool -> Column PGBool
-eNot = O.not
+eNot :: Column Bool -> Column Bool
+eNot = fromPGBool . O.not . toPGBool
 
 eNull :: Column (Nullable a)
 eNull = C.null
 
 -- Implicit calls to ShowConstant
 
-nullable :: (ShowConstant a) => a -> Column (Nullable (PGRep a))
+nullable :: ShowConstant a => a -> Column (Nullable a)
 nullable = toNullable . constant
 
-maybeToNullable :: (ShowConstant a, b ~ PGRep a) => Maybe a -> Column (Nullable b)
+maybeToNullable :: ShowConstant a => Maybe a -> Column (Nullable a)
 maybeToNullable = maybe eNull nullable
 
-fromNullable :: (ShowConstant a, b ~ PGRep a) => a -> Column (Nullable b) -> Column b
+fromNullable :: ShowConstant a => a -> Column (Nullable a) -> Column a
 fromNullable a c = C.fromNullable (constant a) c
+
+-- Aggregations
+
+boolOr :: Aggregator (Column Bool) (Column Bool)
+boolOr = dimap toPGBool fromPGBool A.boolOr
+
+boolAnd :: Aggregator (Column Bool) (Column Bool)
+boolAnd = dimap toPGBool fromPGBool A.boolAnd
 
 -- Unsafe and pretty crappy
 
@@ -287,3 +325,7 @@ flatten3 ((x, y), z) = (x, y, z)
 
 uuidText :: UUID -> Text
 uuidText = T.pack . UUID.toString
+
+isNull :: Column (Nullable a) -> Column Bool
+isNull = fromPGBool . C.isNull
+

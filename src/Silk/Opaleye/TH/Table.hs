@@ -56,8 +56,8 @@ makeType = \case
       ttysO = map pgRep ttys
         where
           pgRep = \case
-            n@(ConT (Name (OccName "Nullable") _)) `AppT` i -> n `AppT` (ConT (mkName "PGRep") `AppT` i)
-            i                                        -> (ConT (mkName "PGRep") `AppT` i)
+            n@(ConT (Name (OccName "Nullable") _)) `AppT` i -> n `AppT` i
+            i                                               -> i
       ttysH :: [Type]
       ttysH = map replaceNullable ttys
         where

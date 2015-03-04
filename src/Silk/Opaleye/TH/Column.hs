@@ -13,6 +13,7 @@ module Silk.Opaleye.TH.Column
   , Nullable
   , Column
   , fieldQueryRunnerColumn
+  , unsafeCoerce
   ) where
 
 import Control.Applicative
@@ -72,10 +73,11 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb =
       = InstanceD [] (ConT (mkName "ShowConstant") `AppT` ConT tyName)
                   [ TySynInstD (mkName "PGRep") (TySynEqn [ConT tyName] (ConT (mkName "PGRep") `AppT` innerTy))
                   , FunD (mkName "constant")
-                      [ Clause [] (NormalB $ VarE (mkName ".") `AppE` VarE (mkName "constant") `AppE` VarE toDb) [] ]
+                       [ Clause [] (NormalB $ InfixE (Just (VarE (mkName "unsafeCoerce"))) (VarE (mkName ".")) (Just (InfixE (Just (VarE (mkName "constant"))) (VarE (mkName ".")) (Just (VarE toDb))))) [] ]
+
                   ]
     queryRunnerColumn
-      = InstanceD [EqualP (ConT (mkName "PGRep") `AppT` ConT tyName) tyVar] (ConT (mkName "QueryRunnerColumnDefault") `AppT` tyVar `AppT` ConT tyName)
+      = InstanceD [EqualP (ConT (mkName "PGRep") `AppT` ConT tyName) tyVar] (ConT (mkName "QueryRunnerColumnDefault") `AppT` ConT tyName `AppT` ConT tyName)
                  queryRunnerBody
       where
         tyVar = VarT $ mkName "a"
