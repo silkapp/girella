@@ -144,20 +144,26 @@ runDelete tab e = liftQ $ do
 
 -- | Run a query and convert the result using Conv.
 runQuery :: ( Default QueryRunner columns haskells
-             , Default Unpackspec columns columns
-             , haskells ~ OpaRep domain
-             , Conv domain
-             , Transaction m
-             ) => Query columns -> m [domain]
+            , Default Unpackspec columns columns
+            , haskells ~ OpaRep domain
+            , Conv domain
+            , Transaction m
+            ) => Query columns -> m [domain]
 runQuery q = do
 -- Useful to uncomment when debugging query errors.
 -- unsafeIOToTransaction . putStrLn . showSqlForPostgres $ q
   fmap conv . runQueryInternal $ q
 
--- | Same as 'queryConv' but only fetches the first row.
-runQueryFirst :: (Default Unpackspec columns columns, Default QueryRunner columns (OpaRep domain), Conv domain, Transaction m) => Query columns -> m (Maybe domain)
-runQueryFirst = fmap headMay . runQuery
+showSql :: Default Unpackspec columns columns => Query columns -> String
+showSql = showSqlForPostgres
 
+-- | Same as 'queryConv' but only fetches the first row.
+runQueryFirst :: ( Default Unpackspec columns columns
+                 , Default QueryRunner columns (OpaRep domain)
+                 , Conv domain
+                 , Transaction m
+                 ) => Query columns -> m (Maybe domain)
+runQueryFirst = fmap headMay . runQuery
 
 -- | Convert an opaleye result to a separate type.
 --
