@@ -6,6 +6,7 @@
   , FlexibleInstances
   , GeneralizedNewtypeDeriving
   , InstanceSigs
+  , LambdaCase
   , MultiParamTypeClasses
   , NoMonomorphismRestriction
   , OverloadedStrings
@@ -67,9 +68,11 @@ import Data.Functor.Contravariant (Contravariant (..))
 import Data.Pool
 import Data.Profunctor
 import Data.Text (Text)
+import Data.Time (UTCTime)
 import Data.UUID (UUID)
 import Database.PostgreSQL.Simple (Connection)
 import GHC.Int (Int64)
+import Opaleye.Sql (showSqlForPostgres)
 import Safe
 import qualified Data.List as L (sum)
 import qualified Data.Text as T
@@ -81,7 +84,7 @@ import Opaleye.Column
 import Opaleye.Join (leftJoin)
 import Opaleye.Manipulation (Unpackspec)
 import Opaleye.Operators
-import Opaleye.Order
+import Opaleye.Order (Order, asc, desc, orderBy)
 import Opaleye.PGTypes
 import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
@@ -89,6 +92,7 @@ import Opaleye.Table
 import qualified Opaleye.Column       as C
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
 import qualified Opaleye.Operators    as O
+import qualified Opaleye.Order        as O
 import qualified Opaleye.RunQuery     as M (runQuery)
 
 import Silk.Opaleye.Range (Range)
@@ -140,14 +144,18 @@ runDelete tab e = liftQ $ do
 
 -- | Run a query and convert the result using Conv.
 runQuery :: ( Default QueryRunner columns haskells
+             , Default Unpackspec columns columns
              , haskells ~ OpaRep domain
              , Conv domain
              , Transaction m
              ) => Query columns -> m [domain]
-runQuery = fmap conv . runQueryInternal
+runQuery q = do
+-- Useful to uncomment when debugging query errors.
+-- unsafeIOToTransaction . putStrLn . showSqlForPostgres $ q
+  fmap conv . runQueryInternal $ q
 
 -- | Same as 'queryConv' but only fetches the first row.
-runQueryFirst :: (Default QueryRunner columns (OpaRep domain), Conv domain, Transaction m) => Query columns -> m (Maybe domain)
+runQueryFirst :: (Default Unpackspec columns columns, Default QueryRunner columns (OpaRep domain), Conv domain, Transaction m) => Query columns -> m (Maybe domain)
 runQueryFirst = fmap headMay . runQuery
 
 
@@ -206,7 +214,27 @@ mrange :: Maybe Range -> Query a -> Query a
 mrange = maybe id range
 
 range :: Range -> Query a -> Query a
-range r = offset (Range.offset r) . limit (Range.limit r)
+range r = O.offset (Range.offset r) . O.limit (Range.limit r)
+
+newtype Limit = Limit { unLimit :: Int }
+  deriving (Eq, Show)
+
+limit :: Limit -> Query a -> Query a
+limit = O.limit . unLimit
+
+mlimit :: Maybe Limit -> Query a -> Query a
+mlimit = maybe id limit
+
+data DateSlice
+  = Before UTCTime
+  | After UTCTime
+  deriving (Eq, Show)
+
+dateSlice :: (a -> Column PGTimestamptz) -> Maybe DateSlice -> QueryArr a a
+dateSlice dateCol mslice = case mslice of
+  Nothing -> where_ (const $ constant True)
+  Just (Before tb) -> where_ (\e -> dateCol e .< constant tb)
+  Just (After  ta) -> where_ (\e -> dateCol e .> constant ta)
 
 -- | Specialized to use in aggregations, just using 'Data.List.sum' may make the type ambiguous.
 sumInt64 :: [Int64] -> Int64
