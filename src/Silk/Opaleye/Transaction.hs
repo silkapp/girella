@@ -29,6 +29,7 @@ import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Error (ErrorT)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Identity (IdentityT)
+import Control.Monad.Trans.Maybe (MaybeT)
 import Control.Monad.Trans.State (StateT)
 import Control.Monad.Trans.Writer (WriterT)
 import Data.Monoid
@@ -108,6 +109,9 @@ instance (MonadPool m, Error e) => MonadPool (ErrorT e m) where
   runTransaction = lift . runTransaction
 
 instance MonadPool m => MonadPool (ExceptT e m) where
+  runTransaction = lift . runTransaction
+
+instance MonadPool m => MonadPool (MaybeT m) where
   runTransaction = lift . runTransaction
 
 runPoolReader :: ConnectInfo -> ReaderT (Pool Connection) IO b -> IO b
