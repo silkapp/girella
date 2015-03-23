@@ -16,6 +16,7 @@
 module Silk.Opaleye
   ( module Control.Arrow
   , module Silk.Opaleye
+  , module Silk.Opaleye.Range
   , module Silk.Opaleye.Transaction
   , module Silk.Opaleye.TypeFams
   , module Opaleye.PGTypes
@@ -32,7 +33,6 @@ module Silk.Opaleye
   , Nullable
   , Order
   , Pool
-  , Range
   , Query
   , QueryArr
   , Column
@@ -92,14 +92,12 @@ import Opaleye.Table
 import qualified Opaleye.Column       as C
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
 import qualified Opaleye.Operators    as O
-import qualified Opaleye.Order        as O
 import qualified Opaleye.RunQuery     as M (runQuery)
 
-import Silk.Opaleye.Range (Range)
+import Silk.Opaleye.Range
 import Silk.Opaleye.TH
 import Silk.Opaleye.Transaction
 import Silk.Opaleye.TypeFams
-import qualified Silk.Opaleye.Range as Range
 
 runInsert :: Transaction m => Table columns columns' -> columns -> m ()
 runInsert tab q = liftQ . Q $ do
@@ -215,21 +213,6 @@ inE hs w = ors . map (w .==) $ hs
 
 notIn :: [Column a] -> Column a -> Column PGBool
 notIn hs w = ands . map (w ./=) $ hs
-
-mrange :: Maybe Range -> Query a -> Query a
-mrange = maybe id range
-
-range :: Range -> Query a -> Query a
-range r = O.offset (Range.offset r) . O.limit (Range.limit r)
-
-newtype Limit = Limit { unLimit :: Int }
-  deriving (Eq, Show)
-
-limit :: Limit -> Query a -> Query a
-limit = O.limit . unLimit
-
-mlimit :: Maybe Limit -> Query a -> Query a
-mlimit = maybe id limit
 
 data DateSlice
   = Before UTCTime
