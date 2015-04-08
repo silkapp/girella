@@ -1,3 +1,4 @@
+{-# LANGUAGE CPP #-}
 module Silk.Opaleye.TH.Column
   ( -- * TH end points
     mkId
@@ -22,7 +23,8 @@ import Data.ByteString (ByteString)
 import Data.Data
 import Data.Profunctor.Product.Default
 import Data.String.Conversions
-import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..), returnError)
+import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
+                                             returnError)
 import Language.Haskell.TH
 import Opaleye.Column
 import Opaleye.Internal.RunQuery
@@ -77,7 +79,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb =
 
                   ]
     queryRunnerColumn
-      = InstanceD [EqualP (ConT (mkName "PGRep") `AppT` ConT tyName) tyVar] (ConT (mkName "QueryRunnerColumnDefault") `AppT` ConT tyName `AppT` ConT tyName)
+      = InstanceD [compEqualP (ConT (mkName "PGRep") `AppT` ConT tyName) tyVar] (ConT (mkName "QueryRunnerColumnDefault") `AppT` ConT tyName `AppT` ConT tyName)
                  queryRunnerBody
       where
         tyVar = VarT $ mkName "a"
@@ -88,3 +90,10 @@ fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe By
 fromFieldAux fromDb f mdata = case mdata of
   Just dat -> maybe (returnError ConversionFailed f (cs dat)) return . fromDb =<< fromField f mdata
   Nothing  -> returnError UnexpectedNull f ""
+
+compEqualP :: Type -> Type -> Pred
+#if MIN_VERSION_template_haskell(2,10,0)
+compEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
+#else
+compEqualP = EqualP
+#endif

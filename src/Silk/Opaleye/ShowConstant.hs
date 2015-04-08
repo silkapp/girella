@@ -42,7 +42,7 @@ import Opaleye.Column (Column)
 import Opaleye.PGTypes
 
 class ShowConstant a where
-  type PGRep h :: *
+  type PGRep a :: *
   constant :: a -> Column a
 
 instance ShowConstant [Char] where
