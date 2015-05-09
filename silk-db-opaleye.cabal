@@ -1,5 +1,5 @@
 name:                silk-db-opaleye
-version:             0.2.0.2
+version:             0.2.0.3
 license:             OtherLicense
 synopsis:            Wrapper over Opaleye
 description:         Wrapper over Opaleye
@@ -29,15 +29,11 @@ library
   other-modules:
   build-depends:
       base >= 4.6 && < 4.9
-    , aeson >= 0.7.0.6 && < 0.9
     , aeson-utils >= 0.2 && < 0.4
     , bytestring == 0.10.*
     , case-insensitive == 1.2.*
     , contravariant >= 1.2 && < 1.4
-    , convertible >= 1.0 && < 1.2
-    , fclabels >= 1.0 && < 2.1
     , hslogger >= 1.1 && < 1.3
-    , monad-control == 0.3.*
     , mtl >= 2.0 && < 2.3
     , mtl-compat >= 0.1 && < 0.3
     , opaleye >= 0.3.1 && < 0.4
@@ -47,12 +43,10 @@ library
     , resource-pool == 0.2.*
     , safe == 0.3.*
     , string-conversions == 0.3.*
-    , tagged >= 0.7 && < 0.9
     , template-haskell >= 2.9 && < 2.11
     , text >= 0.11 && < 1.3
     , time >= 1.4 && < 1.6
     , transformers >= 0.3 && < 0.5
-    , transformers-base == 0.4.*
     , transformers-compat >= 0.3 && < 0.5
     , uniplate == 1.6.*
     , uuid == 1.3.*
