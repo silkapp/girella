@@ -233,10 +233,10 @@ restrict = O.restrict . arr unsafeCoerce
 
 
 ors :: Foldable f => f (Column Bool) -> Column Bool
-ors = foldr (.||) (constant True)
+ors = foldr (.||) (constant False)
 
 ands :: Foldable f => f (Column Bool) -> Column Bool
-ands = foldr (.&&) (constant False)
+ands = foldr (.&&) (constant True)
 
 inE :: ShowConstant o => [Column o] -> Column o -> Column Bool
 inE hs w = ors . map (w .==) $ hs
