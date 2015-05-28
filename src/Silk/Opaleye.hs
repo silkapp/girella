@@ -38,6 +38,8 @@ module Silk.Opaleye
   , groupBy
   , lmap
   , matchNullable
+  , maxColumn
+  , minColumn
   , orderBy
   , queryTable
   , required
@@ -285,6 +287,12 @@ boolOr = dimap toPGBool fromPGBool A.boolOr
 
 boolAnd :: Aggregator (Column Bool) (Column Bool)
 boolAnd = dimap toPGBool fromPGBool A.boolAnd
+
+maxColumn :: Aggregator (Column a) (Column a)
+maxColumn = A.max
+
+minColumn :: Aggregator (Column a) (Column a)
+minColumn = A.min
 
 -- Unsafe and pretty crappy
 
