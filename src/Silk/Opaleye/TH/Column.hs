@@ -21,6 +21,7 @@ import Control.Applicative
 import Control.Monad
 import Data.ByteString (ByteString)
 import Data.Data
+import Data.Maybe (catMaybes)
 import Data.Profunctor.Product.Default
 import Data.String.Conversions
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
@@ -63,28 +64,55 @@ makeColumnInstances :: Name -> Name -> Name -> Name -> Q [Dec]
 makeColumnInstances tyName innerTyName toDb fromDb = makeColumnInstancesInternal tyName (ConT innerTyName) toDb fromDb
 
 makeColumnInstancesInternal :: Name -> Type -> Name -> Name -> Q [Dec]
-makeColumnInstancesInternal tyName innerTy toDb fromDb =
-    return [fromFld, showConst, queryRunnerColumn]
+makeColumnInstancesInternal tyName innerTy toDb fromDb = do
+  tvars <- getTyVars tyName
+  let predCond = map (ClassP (mkName "Typeable") . (:[])) tvars
+  let outterTy = foldl AppT (ConT tyName) tvars
+  return $ map ($ (predCond, outterTy)) [fromFld, showConst, queryRunnerColumn]
   where
-    fromFld
-      = InstanceD [] (ConT (mkName "FromField") `AppT` ConT tyName)
-                  [ FunD (mkName "fromField")
-                    [ Clause [] (NormalB $ VarE (mkName "fromFieldAux") `AppE` VarE fromDb) [] ]
-                  ]
-    showConst
-      = InstanceD [] (ConT (mkName "ShowConstant") `AppT` ConT tyName)
-                  [ TySynInstD (mkName "PGRep") (TySynEqn [ConT tyName] (ConT (mkName "PGRep") `AppT` innerTy))
-                  , FunD (mkName "constant")
-                       [ Clause [] (NormalB $ InfixE (Just (VarE (mkName "unsafeCoerce"))) (VarE (mkName ".")) (Just (InfixE (Just (VarE (mkName "constant"))) (VarE (mkName ".")) (Just (VarE toDb))))) [] ]
+    fromFld (predCond, outterTy)
+      = InstanceD
+          predCond
+          (ConT (mkName "FromField") `AppT` outterTy)
+          [ FunD (mkName "fromField")
+            [ Clause [] (NormalB $ VarE (mkName "fromFieldAux") `AppE` VarE fromDb) [] ]
+          ]
+    showConst (_, outterTy)
+      = InstanceD
+          []
+          (ConT (mkName "ShowConstant") `AppT` outterTy)
+          [ TySynInstD (mkName "PGRep") (TySynEqn [outterTy] (ConT (mkName "PGRep") `AppT` innerTy))
+          , FunD (mkName "constant")
+            [ Clause []
+              (NormalB $ InfixE
+               (Just (VarE (mkName "unsafeCoerce")))
+               (VarE (mkName "."))
+               (Just (InfixE (Just (VarE (mkName "constant"))) (VarE (mkName ".")) (Just (VarE toDb))))
+              )
+              []
+            ]
+          ]
+    queryRunnerColumn (predCond, outterTy)
+      = InstanceD
+          ([compEqualP (ConT (mkName "PGRep") `AppT` outterTy) tyVar] ++ predCond)
+          (ConT (mkName "QueryRunnerColumnDefault") `AppT` outterTy `AppT` outterTy)
+          [ FunD
+            (mkName "queryRunnerColumnDefault")
+            [ Clause [] (NormalB $ VarE $ mkName "fieldQueryRunnerColumn") [] ]
+          ]
+      where tyVar = VarT $ mkName "a"
 
-                  ]
-    queryRunnerColumn
-      = InstanceD [compEqualP (ConT (mkName "PGRep") `AppT` ConT tyName) tyVar] (ConT (mkName "QueryRunnerColumnDefault") `AppT` ConT tyName `AppT` ConT tyName)
-                 queryRunnerBody
-      where
-        tyVar = VarT $ mkName "a"
-    queryRunnerBody = qr "fieldQueryRunnerColumn"
-    qr q = [ FunD (mkName "queryRunnerColumnDefault") [ Clause [] (NormalB $ VarE $ mkName q) [] ] ]
+getTyVars :: Name -> Q [Type]
+getTyVars n = do
+  info <- reify n
+  return . catMaybes . map onlyPlain $ case info of
+    TyConI (DataD    _ _ tvars _ _) -> tvars
+    TyConI (NewtypeD _ _ tvars _ _) -> tvars
+    TyConI (TySynD   _   tvars _  ) -> tvars
+    _                               -> []
+  where
+    onlyPlain (PlainTV nv) = Just $ VarT nv
+    onlyPlain _            = Nothing
 
 fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe ByteString -> Conversion b
 fromFieldAux fromDb f mdata = case mdata of
