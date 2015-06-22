@@ -38,8 +38,6 @@ module Silk.Opaleye
   , groupBy
   , lmap
   , matchNullable
-  , maxColumn
-  , minColumn
   , orderBy
   , queryTable
   , required
