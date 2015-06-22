@@ -13,7 +13,9 @@ module Silk.Opaleye.Operators
   , (.<)
   , (.>=)
   , (.<=)
+  , upper
   , lower
+  , like
   , ors
   , ands
   , in_
@@ -79,8 +81,14 @@ infix 4 .<=
 (.<=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .<= b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
 
+upper :: PGRep a ~ PGText => Column a -> Column a
+upper = safeCoerceFromRep . O.upper . safeCoerceToRep
+
 lower :: PGRep a ~ PGText => Column a -> Column a
 lower = safeCoerceFromRep . O.lower . safeCoerceToRep
+
+like :: PGRep a ~ PGText => Column a -> Column a -> Column Bool
+like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
 
 -- Query helpers
 
