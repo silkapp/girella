@@ -6,6 +6,7 @@
   , NoMonomorphismRestriction
   , TemplateHaskell
   , TypeFamilies
+  , UndecidableInstances
   #-}
 module Example where
 
@@ -15,7 +16,7 @@ import Control.Arrow
 import Control.Category
 import Data.UUID
 
-import Silk.Opaleye hiding (name)
+import Silk.Opaleye
 import Silk.Opaleye.TH
 
 newtype Id = Id { unId :: UUID }
@@ -37,7 +38,7 @@ stringToGender = \case
   "female" -> Just Female
   _        -> Nothing
 
-makeColumnInstances ''Gender 'genderToString 'stringToGender
+makeColumnInstances ''Gender ''String 'genderToString 'stringToGender
 
 makeTypes [d|
     data Person = Person
@@ -88,5 +89,5 @@ insertAndSelectAll n a mg = do
   runQuery queryAll
 
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
-runInsertAndSelectAll :: MonadPool => String -> Int -> Maybe Gender -> m [PersonH]
+runInsertAndSelectAll :: MonadPool m => String -> Int -> Maybe Gender -> m [PersonH]
 runInsertAndSelectAll n a mg = runTransaction $ insertAndSelectAll n a mg
