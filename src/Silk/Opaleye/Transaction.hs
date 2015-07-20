@@ -38,7 +38,7 @@ import Database.PostgreSQL.Simple (ConnectInfo (..), Connection)
 import System.Log.Logger
 import qualified Database.PostgreSQL.Simple as PG
 
-class (Functor m, Monad m) => Transaction m where
+class (Functor m, Applicative m, Monad m) => Transaction m where
   liftQ :: Q a -> m a
 
 instance Transaction Q where
@@ -96,7 +96,7 @@ runTransaction' q p = runT q p (withRetry 1)
        . flip runReaderT conn
        . unQ $ t
 
-class (Functor m, Monad m) => MonadPool m where
+class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
 instance MonadPool m => MonadPool (ReaderT r m) where
