@@ -1,4 +1,4 @@
--- Module used from code that only runs predefined db actions.
+-- | Import this module if you only want to run queries
 module Silk.Opaleye.Run
   ( MonadPool
   , runTransaction

@@ -26,6 +26,7 @@ library
     Silk.Opaleye.TH.Util
     Silk.Opaleye.Transaction
     Silk.Opaleye.TypeFams
+    Silk.Opaleye.Misc
   other-modules:
   build-depends:
       base >= 4.6 && < 4.9

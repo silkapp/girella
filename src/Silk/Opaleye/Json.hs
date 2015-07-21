@@ -1,16 +1,17 @@
 {-# LANGUAGE
     DeriveDataTypeable
-  , DeriveGeneric
-  , FlexibleInstances
   , GeneralizedNewtypeDeriving
   , MultiParamTypeClasses
-  , OverloadedStrings
   , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances
   #-}
 -- | Json data stored in a postgres text column, this does not decode into a specific type.
-module Silk.Opaleye.Json where
+module Silk.Opaleye.Json
+  ( Json (..)
+  , jsonToText
+  , textToJson
+  ) where
 
 import Data.Aeson.Utils
 import Data.String.Conversions
