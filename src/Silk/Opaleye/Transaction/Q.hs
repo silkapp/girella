@@ -17,4 +17,3 @@ newtype Q a = Q { unQ :: ReaderT Connection IO a }
 
 unsafeIOToQ :: IO a -> Q a
 unsafeIOToQ = Q . liftIO
-

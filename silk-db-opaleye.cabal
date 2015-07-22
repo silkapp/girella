@@ -16,19 +16,25 @@ library
   hs-source-dirs:    src
   exposed-modules:
     Silk.Opaleye
+    Silk.Opaleye.Aggregation
+    Silk.Opaleye.Combinators
+    Silk.Opaleye.Config
+    Silk.Opaleye.Conv
     Silk.Opaleye.Json
+    Silk.Opaleye.Misc
+    Silk.Opaleye.Operators
+    Silk.Opaleye.Query
     Silk.Opaleye.Range
     Silk.Opaleye.Run
-    Silk.Opaleye.TH
     Silk.Opaleye.ShowConstant
+    Silk.Opaleye.TH
     Silk.Opaleye.TH.Column
     Silk.Opaleye.TH.Table
     Silk.Opaleye.TH.Util
+    Silk.Opaleye.To
     Silk.Opaleye.Transaction
-    Silk.Opaleye.TypeFams
-    Silk.Opaleye.Misc
-    Silk.Opaleye.Config
   other-modules:
+    Silk.Opaleye.Transaction.Q
   build-depends:
       base >= 4.6 && < 4.9
     , aeson-utils >= 0.2 && < 0.4
