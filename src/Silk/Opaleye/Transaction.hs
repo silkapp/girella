@@ -60,18 +60,21 @@ instance Transaction m => Transaction (IdentityT m) where
 unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
-runQ :: forall a . Config -> Q a -> IO a
-runQ cfg q
-  = withRetry 1
-  $ withResource (connectionPool cfg)
-  $ \conn -> PG.withTransaction conn . flip runReaderT conn . unQ $ q
+runQ :: forall c a . Config c -> Q a -> IO a
+runQ cfg q = do
+  c <- beforeTransaction cfg
+  res <- withRetry c 1
+    $ withResource (connectionPool cfg)
+    $ \conn -> PG.withTransaction conn . flip runReaderT conn . unQ $ q
+  afterTransaction cfg c
+  return res
   where
-    withRetry :: Int -> IO a -> IO a
-    withRetry n act = act `catchRecoverableExceptions` handler n act
-    handler :: Int -> IO a -> SomeException -> IO a
-    handler n act (SomeException e) =
+    withRetry :: c -> Int -> IO a -> IO a
+    withRetry c n act = act `catchRecoverableExceptions` handler c n act
+    handler :: c -> Int -> IO a -> SomeException -> IO a
+    handler c n act (SomeException e) =
       if n < maxTries cfg
-        then onRetry cfg e >> withRetry (n + 1) act
+        then onRetry cfg e c >> withRetry c (n + 1) act
         else throwIO e
     catchRecoverableExceptions :: IO a -> (SomeException -> IO a) -> IO a
     catchRecoverableExceptions action h = action `catches`
@@ -85,7 +88,7 @@ runQ cfg q
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
-instance MonadPool (ReaderT Config IO) where
+instance MonadPool (ReaderT (Config a) IO) where
   runTransaction t = ask >>= lift . (`runQ` t)
 
 instance MonadPool m => MonadPool (ReaderT r m) where
