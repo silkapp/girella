@@ -31,11 +31,10 @@ import Control.Monad.Trans.Maybe (MaybeT)
 import Control.Monad.Trans.State (StateT)
 import Control.Monad.Trans.Writer (WriterT)
 import Data.Monoid
-import Data.Pool (Pool, createPool, withResource)
-import Database.PostgreSQL.Simple (ConnectInfo (..), Connection)
-import System.Log.Logger
+import Data.Pool (withResource)
 import qualified Database.PostgreSQL.Simple as PG
 
+import Silk.Opaleye.Config
 import Silk.Opaleye.Transaction.Q (Q (..), unsafeIOToQ)
 
 class (Functor m, Applicative m, Monad m) => Transaction m where
@@ -65,16 +64,19 @@ instance Transaction m => Transaction (IdentityT m) where
 unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
-runQ :: forall a . Q a -> Pool Connection -> IO a
-runQ q p = withRetry 1 runT
+runQ :: forall a . Config -> Q a -> IO a
+runQ cfg q
+  = withRetry 1
+  $ withResource (connectionPool cfg)
+  $ \conn -> PG.withTransaction conn . flip runReaderT conn . unQ $ q
   where
+    withRetry :: Int -> IO a -> IO a
     withRetry n act = act `catchRecoverableExceptions` handler n act
+    handler :: Int -> IO a -> SomeException -> IO a
     handler n act (SomeException e) =
-      if n < maxDbTries
-        then do warningM "Db" ("Exception during database action, retrying: " ++ show e)
-                withRetry (n + 1) act
+      if n < maxTries cfg
+        then onRetry cfg e >> withRetry (n + 1) act
         else throwIO e
-    maxDbTries = 3 :: Int
     catchRecoverableExceptions :: IO a -> (SomeException -> IO a) -> IO a
     catchRecoverableExceptions action h = action `catches`
       [ Handler $ \(e :: AsyncException)            -> throwIO e
@@ -83,14 +85,12 @@ runQ q p = withRetry 1 runT
       , Handler $ \(e :: Deadlock)                  -> throwIO e
       , Handler $ \(e :: SomeException)             -> h e
       ]
-    runT = withResource p $ \conn ->
-      PG.withTransaction conn . flip runReaderT conn . unQ $ q
 
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
-instance MonadPool (ReaderT (Pool Connection) IO) where
-  runTransaction t = ask >>= lift . runQ t
+instance MonadPool (ReaderT Config IO) where
+  runTransaction t = ask >>= lift . (`runQ` t)
 
 instance MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
@@ -103,6 +103,3 @@ instance MonadPool m => MonadPool (ExceptT e m) where
 
 instance MonadPool m => MonadPool (MaybeT m) where
   runTransaction = lift . runTransaction
-
-createPGPool :: ConnectInfo -> IO (Pool Connection)
-createPGPool connectInfo = createPool (PG.connect connectInfo) PG.close 10 5 10
