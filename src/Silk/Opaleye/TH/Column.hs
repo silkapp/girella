@@ -17,19 +17,18 @@ module Silk.Opaleye.TH.Column
   , unsafeCoerce
   ) where
 
-import Control.Applicative
-import Control.Monad
+import Control.Applicative ((<$>))
+import Control.Monad ((<=<))
 import Data.ByteString (ByteString)
-import Data.Data
+import Data.Data (Typeable)
 import Data.Maybe (mapMaybe)
-import Data.Maybe (catMaybes)
-import Data.Profunctor.Product.Default
-import Data.String.Conversions
+import Data.Profunctor.Product.Default (Default (def))
+import Data.String.Conversions (cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
                                              returnError)
 import Language.Haskell.TH
-import Opaleye.Column
-import Opaleye.Internal.RunQuery
+import Opaleye.Column (Column, Nullable, unsafeCoerce)
+import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..), fieldQueryRunnerColumn)
 
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util (getConNameTy, ty)
