@@ -120,4 +120,4 @@ maybeToNullable = maybe null_ nullable
 
 -- | 'fromMaybe' for 'Column'.
 fromNullable :: ShowConstant a => a -> Column (Nullable a) -> Column a
-fromNullable a c = C.fromNullable (constant a) c
+fromNullable = C.fromNullable . constant

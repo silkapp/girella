@@ -34,7 +34,7 @@ import Silk.Opaleye.Transaction
 runInsert :: Transaction m => Table columns columns' -> columns -> m ()
 runInsert tab q = liftQ $ do
   conn <- ask
-  unsafeIOToTransaction $ void $ M.runInsert conn tab q
+  unsafeIOToTransaction . void $ M.runInsert conn tab q
 
 -- | runInsertReturning inside a Transaction
 runInsertReturning
@@ -58,7 +58,7 @@ runUpdate tab upd cond = liftQ $ do
 
 -- | Update without using the current values
 runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column Bool) -> m Int64
-runUpdateConst tab me cond = runUpdate tab (const me) cond
+runUpdateConst tab = runUpdate tab . const
 
 runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column Bool) -> m Int64
 runDelete tab cond = liftQ $ do
@@ -73,7 +73,7 @@ runQueryInternal
   => Query columns -> m [haskells]
 runQueryInternal q = liftQ  $ do
   conn <- ask
-  unsafeIOToTransaction $ M.runQuery conn $ q
+  unsafeIOToTransaction $ M.runQuery conn q
 
 -- | Run a query and convert the result using Conv.
 runQuery :: ( Default QueryRunner columns haskells
@@ -82,7 +82,7 @@ runQuery :: ( Default QueryRunner columns haskells
             , Conv domain
             , Transaction m
             ) => Query columns -> m [domain]
-runQuery q = do
+runQuery q =
 -- Useful to uncomment when debugging query errors.
 -- unsafeIOToTransaction . putStrLn . showSqlForPostgres $ q
   fmap conv . runQueryInternal $ q

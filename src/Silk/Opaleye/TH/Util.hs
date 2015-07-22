@@ -3,15 +3,12 @@ module Silk.Opaleye.TH.Util
   , ty
   , simpleName
   , ambiguateName
-  , multiAppE
   ) where
 
-import Data.List
 import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 
-multiAppE :: Exp -> [Exp] -> Exp
-multiAppE x ys = foldl' (\a b-> a `AppE` b) x ys
+import Silk.Opaleye.Misc (trd3)
 
 simpleName :: String -> Name
 simpleName = mkName
@@ -30,12 +27,12 @@ getConName c = case c of
 
 getConTy :: Con -> Either String [Type]
 getConTy c = case c of
-  NormalC _ t -> Right $ map (\(_,b) -> b) t
-  RecC _ t -> Right $ map (\(_,_,b) -> b) t
-  _ -> Left "Only normal and record constructors are allowed"
+  NormalC _ t -> Right $ map snd t
+  RecC _ t    -> Right $ map trd3 t
+  _           -> Left "Only normal and record constructors are allowed"
 
 getConNameTy :: Con -> Either String (Name, [Type])
 getConNameTy c = do
   nm <- getConName c
-  t <- getConTy c
-  return $ (nm,t)
+  t  <- getConTy c
+  return (nm,t)

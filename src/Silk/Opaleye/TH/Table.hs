@@ -17,26 +17,23 @@ module Silk.Opaleye.TH.Table
   , p0, p1, p2, p3, p4, p5, p6, p7, p8, p9, p10, p11, p12, p13, p14, p15, p16
   ) where
 
-import Control.Monad
-import Data.Char
-import Data.Generics.Uniplate.Data
-import Data.List
-import Data.Profunctor
-import Data.Profunctor.Product
-import Data.Profunctor.Product.TH
-import Language.Haskell.TH
+import Control.Monad ((<=<))
+import Data.Char (isUpper, toLower)
+import Data.Generics.Uniplate.Data (transformBi)
+import Data.List (foldl')
+import Data.Profunctor (dimap)
+import Data.Profunctor.Product (ProductProfunctor, p0, p1, p10, p11, p12, p13, p14, p15, p16, p2,
+                                p3, p4, p5, p6, p7, p8, p9)
+import Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import Language.Haskell.TH.Syntax
-import Opaleye.Column
-import Opaleye.Table
+import Opaleye.Column (Column, Nullable)
+import Opaleye.Table (Table (Table), TableProperties, optional)
 
-import Silk.Opaleye.TH.Util
-import Silk.Opaleye.To
+import Silk.Opaleye.TH.Util (ambiguateName, simpleName, ty)
+import Silk.Opaleye.To (To)
 
 makeTypes :: Q [Dec] -> Q [Dec]
-makeTypes decls =
-  do ds <- decls
-     ls <- mapM makeType ds
-     return $ concat ls
+makeTypes = (fmap concat . mapM makeType =<<)
 
 makeType :: Dec -> Q [Dec]
 makeType = \case
@@ -71,8 +68,8 @@ makeType = \case
           f :: Name -> VarStrictType -> VarStrictType
           f c (n,s,_) = (ambiguateName n, s, VarT c)
 
-      aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) $ ttysO
-      aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) $ ttysH
+      aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) ttysO
+      aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) ttysH
 
       toInstance = TySynInstD (simpleName "To")
                      (TySynEqn [typ, lhs] rhs)
@@ -120,7 +117,7 @@ makeTable_ tableName pName = f <=< reify
          emptyUpdateBody = FunD (simpleName "emptyUpdate") [Clause [] (NormalB e) []]
            where
              e :: Exp
-             e = multiAppE (ConE recordName) . map (const . ConE $ simpleName "Nothing") $ vsts
+             e = foldl' AppE (ConE recordName) . map (const . ConE $ simpleName "Nothing") $ vsts
 
       _ -> error "makeTable_: I need one record"
 

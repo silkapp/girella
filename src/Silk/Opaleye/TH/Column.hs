@@ -21,6 +21,7 @@ import Control.Applicative
 import Control.Monad
 import Data.ByteString (ByteString)
 import Data.Data
+import Data.Maybe (mapMaybe)
 import Data.Maybe (catMaybes)
 import Data.Profunctor.Product.Default
 import Data.String.Conversions
@@ -31,7 +32,7 @@ import Opaleye.Column
 import Opaleye.Internal.RunQuery
 
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
-import Silk.Opaleye.TH.Util
+import Silk.Opaleye.TH.Util (getConNameTy, ty)
 
 -- TODO This assumes the destructor is named unId, can be changed to a pattern match.
 -- TODO It's probably too lenient with input as well, only newtypes or constructors with one field are allowed.
@@ -94,7 +95,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb = do
           ]
     queryRunnerColumn (predCond, outterTy)
       = InstanceD
-          ([compEqualP (ConT (mkName "PGRep") `AppT` outterTy) tyVar] ++ predCond)
+          (compEqualP (ConT (mkName "PGRep") `AppT` outterTy) tyVar : predCond)
           (ConT (mkName "QueryRunnerColumnDefault") `AppT` outterTy `AppT` outterTy)
           [ FunD
             (mkName "queryRunnerColumnDefault")
@@ -105,7 +106,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb = do
 getTyVars :: Name -> Q [Type]
 getTyVars n = do
   info <- reify n
-  return . catMaybes . map onlyPlain $ case info of
+  return . mapMaybe onlyPlain $ case info of
     TyConI (DataD    _ _ tvars _ _) -> tvars
     TyConI (NewtypeD _ _ tvars _ _) -> tvars
     TyConI (TySynD   _   tvars _  ) -> tvars
@@ -120,8 +121,8 @@ fromFieldAux fromDb f mdata = case mdata of
   Nothing  -> returnError UnexpectedNull f ""
 
 compEqualP :: Type -> Type -> Pred
-#if MIN_VERSION_template_haskell(2,10,0)
-compEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
-#else
 compEqualP = EqualP
-#endif
+-- #if MIN_VERSION_template_haskell(2,10,0)
+-- compEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
+-- #else
+-- #endif

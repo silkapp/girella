@@ -1,11 +1,7 @@
 {-# OPTIONS -fno-warn-deprecations #-}
 {-# LANGUAGE
-    DeriveFunctor
-  , FlexibleContexts
+    FlexibleContexts
   , FlexibleInstances
-  , GeneralizedNewtypeDeriving
-  , InstanceSigs
-  , MultiParamTypeClasses
   , OverloadedStrings
   , ScopedTypeVariables
   , TypeFamilies

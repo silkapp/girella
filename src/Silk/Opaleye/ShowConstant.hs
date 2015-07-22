@@ -33,13 +33,11 @@ import qualified Data.Text            as S
 import qualified Data.Text.Lazy       as L
 import qualified Data.UUID            as UUID
 
-import Opaleye.Column (unsafeCoerce)
+import Opaleye.Column (Column, unsafeCoerce)
 import Opaleye.Internal.RunQuery
+import Opaleye.PGTypes
 import Opaleye.RunQuery
 import qualified Opaleye.Internal.HaskellDB.PrimQuery as HPQ
-
-import Opaleye.Column (Column)
-import Opaleye.PGTypes
 
 class ShowConstant a where
   type PGRep a :: *
