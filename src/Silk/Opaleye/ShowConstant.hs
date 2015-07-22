@@ -1,4 +1,4 @@
-{-# OPTIONS -fno-warn-orphans #-}
+{-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
     FlexibleInstances
   , MultiParamTypeClasses
@@ -28,16 +28,13 @@ import Data.Int (Int64)
 import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
-import qualified Data.CaseInsensitive as CI
-import qualified Data.Text            as S
-import qualified Data.Text.Lazy       as L
-import qualified Data.UUID            as UUID
+import qualified Data.Text      as S
+import qualified Data.Text.Lazy as L
 
 import Opaleye.Column (Column, unsafeCoerce)
 import Opaleye.Internal.RunQuery
 import Opaleye.PGTypes
 import Opaleye.RunQuery
-import qualified Opaleye.Internal.HaskellDB.PrimQuery as HPQ
 
 class ShowConstant a where
   type PGRep a :: *
@@ -133,13 +130,13 @@ class TString a where
   constantString :: a -> Column a
 
 instance TString [Char] where
-  constantString = literalColumn . HPQ.StringLit
+  constantString = unsafeCoerce . pgString
 
 instance TString StrictText where
-  constantString = unsafeCoerce . constantString . S.unpack
+  constantString = unsafeCoerce . pgStrictText
 
 instance TString LazyText where
-  constantString = unsafeCoerce . constantString . L.unpack
+  constantString = unsafeCoerce . pgLazyText
 
 class TInt4 a where
   constantInt4 :: a -> Column a
@@ -148,16 +145,16 @@ class TInt8 a where
   constantInt8 :: a -> Column a
 
 instance TInt4 Int where
-  constantInt4 = literalColumn . HPQ.IntegerLit . fromIntegral
+  constantInt4 = unsafeCoerce . pgInt4
 
 instance TInt8 Int64 where
-  constantInt8 = literalColumn . HPQ.IntegerLit . fromIntegral
+  constantInt8 = unsafeCoerce . pgInt8
 
 class TDouble a where
   constantDouble :: a -> Column a
 
 instance TDouble Double where
-  constantDouble = literalColumn . HPQ.DoubleLit
+  constantDouble = unsafeCoerce . pgDouble
 
 class TBool a where
   constantBool :: a -> Column a
@@ -169,46 +166,46 @@ fromPGBool :: Column PGBool -> Column Bool
 fromPGBool = unsafeCoerce
 
 instance TBool Bool where
-  constantBool = literalColumn . HPQ.BoolLit
+  constantBool = unsafeCoerce . pgBool
 
 class TUUID a where
   constantUUID :: a -> Column a
 
 instance TUUID UUID where
-  constantUUID = unsafeCoerce . pgString . UUID.toString
+  constantUUID = unsafeCoerce . pgUUID
 
 class TDate a where
   constantDay :: a -> Column a
 
 instance TDate Day where
-  constantDay = unsafePgFormatTime "date" "'%F'"
+  constantDay = unsafeCoerce . pgDay
 
 class TTimestamptz a where
   constantTimestamptz :: a -> Column a
 
 instance TTimestamptz UTCTime where
-  constantTimestamptz = unsafePgFormatTime "timestamptz" "'%FT%TZ'"
+  constantTimestamptz = unsafeCoerce . pgUTCTime
 
 class TTimestamp a where
   constantTimestamp :: a -> Column a
 
 instance TTimestamp LocalTime where
-  constantTimestamp = unsafePgFormatTime "timestamp" "'%FT%T'"
+  constantTimestamp = unsafeCoerce . pgLocalTime
 
 class TTime a where
   constantTime :: a -> Column a
 
 instance TTime TimeOfDay where
-  constantTime = unsafePgFormatTime "time" "'%T'"
+  constantTime = unsafeCoerce . pgTimeOfDay
 
 class TCIText a where
   constantCIText :: a -> Column a
 
 instance TCIText (CI StrictText) where
-  constantCIText = literalColumn . HPQ.StringLit . cs . CI.original
+  constantCIText = unsafeCoerce . pgCiStrictText
 
 instance TCIText (CI LazyText) where
-  constantCIText = literalColumn . HPQ.StringLit . cs . CI.original
+  constantCIText = unsafeCoerce . pgCiLazyText
 
 class TOrd a
 
