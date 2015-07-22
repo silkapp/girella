@@ -3,6 +3,7 @@
     FlexibleInstances
   , MultiParamTypeClasses
   , NoMonomorphismRestriction
+  , ScopedTypeVariables
   , TypeFamilies
   , UndecidableInstances
   #-}
@@ -32,7 +33,7 @@ import qualified Data.Text      as S
 import qualified Data.Text.Lazy as L
 
 import Opaleye.Column (Column, unsafeCoerce)
-import Opaleye.Internal.RunQuery
+import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..))
 import Opaleye.PGTypes
 import Opaleye.RunQuery
 
@@ -44,87 +45,87 @@ instance ShowConstant [Char] where
   type PGRep String = PGText
   constant = constantString
 instance QueryRunnerColumnDefault [Char] [Char] where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column String -> Column (PGRep String))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant StrictText where
   type PGRep S.Text = PGText
   constant = constantString
 instance QueryRunnerColumnDefault S.Text S.Text where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column S.Text -> Column (PGRep S.Text))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant LazyText where
   type PGRep L.Text = PGText
   constant = constantString
 instance QueryRunnerColumnDefault L.Text L.Text where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column L.Text -> Column (PGRep L.Text))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Int where
   type PGRep Int = PGInt4
   constant = constantInt4
 instance QueryRunnerColumnDefault Int Int where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column Int -> Column (PGRep Int))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Int64 where
   type PGRep Int64 = PGInt8
   constant = constantInt8
 instance QueryRunnerColumnDefault Int64 Int64 where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column Int64 -> Column (PGRep Int64))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Double where
   type PGRep Double = PGFloat8
   constant = constantDouble
 instance QueryRunnerColumnDefault Double Double where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column Double -> Column (PGRep Double))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Bool where
   type PGRep Bool = PGBool ; constant = constantBool
 instance QueryRunnerColumnDefault Bool Bool where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column Bool -> Column PGBool)
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant UUID where
   type PGRep UUID = PGUuid
   constant = constantUUID
 instance QueryRunnerColumnDefault UUID UUID where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column UUID -> Column PGUuid)
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Day where
   type PGRep Day = PGDate
   constant = constantDay
 instance QueryRunnerColumnDefault Day Day where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column Day -> Column (PGRep Day))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant UTCTime where
   type PGRep UTCTime = PGTimestamptz
   constant = constantTimestamptz
 instance QueryRunnerColumnDefault UTCTime UTCTime where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column UTCTime -> Column PGTimestamptz)
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant LocalTime where
   type PGRep LocalTime = PGTimestamp
   constant = constantTimestamp
 instance QueryRunnerColumnDefault LocalTime LocalTime where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column LocalTime -> Column (PGRep LocalTime))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant TimeOfDay where
   type PGRep TimeOfDay = PGTime
   constant = constantTime
 instance QueryRunnerColumnDefault TimeOfDay TimeOfDay where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column TimeOfDay -> Column (PGRep TimeOfDay))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant (CI S.Text) where
   type PGRep (CI S.Text) = PGCitext
   constant = constantCIText
 instance QueryRunnerColumnDefault (CI S.Text) (CI S.Text) where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column (CI S.Text) -> Column (PGRep (CI S.Text)))
+  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant (CI L.Text) where
   type PGRep (CI L.Text) = PGCitext
   constant = constantCIText
 instance QueryRunnerColumnDefault (CI L.Text) (CI L.Text) where
-  queryRunnerColumnDefault = qrcDef (unsafeCoerce :: Column (CI L.Text) -> Column (PGRep (CI L.Text)))
+  queryRunnerColumnDefault = qrcDef
 
-qrcDef :: QueryRunnerColumnDefault b c => (Column a -> Column b) -> QueryRunnerColumn a c
-qrcDef u = queryRunnerColumn u id queryRunnerColumnDefault
+qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
+qrcDef = queryRunnerColumn (unsafeCoerce :: Column a -> Column b) id queryRunnerColumnDefault
 
 class TString a where
   constantString :: a -> Column a
