@@ -1,4 +1,4 @@
-{-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
+{-# OPTIONS -fno-warn-deprecations #-}
 {-# LANGUAGE
     DeriveFunctor
   , FlexibleContexts
@@ -6,7 +6,6 @@
   , GeneralizedNewtypeDeriving
   , InstanceSigs
   , MultiParamTypeClasses
-  , OverlappingInstances
   , OverloadedStrings
   , ScopedTypeVariables
   , TypeFamilies
@@ -23,8 +22,7 @@ module Silk.Opaleye.Transaction where
 import Control.Applicative
 import Control.Exception
 import Control.Monad.Error.Class (Error)
-import Control.Monad.IO.Class (MonadIO, liftIO)
-import Control.Monad.Reader (MonadReader, ReaderT, ask, runReaderT)
+import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class (lift)
 import Control.Monad.Trans.Error (ErrorT)
 import Control.Monad.Trans.Except (ExceptT)
@@ -37,6 +35,8 @@ import Data.Pool (Pool, createPool, withResource)
 import Database.PostgreSQL.Simple (ConnectInfo (..), Connection)
 import System.Log.Logger
 import qualified Database.PostgreSQL.Simple as PG
+
+import Silk.Opaleye.Transaction.Q (Q (..), unsafeIOToQ)
 
 class (Functor m, Applicative m, Monad m) => Transaction m where
   liftQ :: Q a -> m a
@@ -62,17 +62,11 @@ instance Transaction m => Transaction (StateT s m) where
 instance Transaction m => Transaction (IdentityT m) where
   liftQ = lift . liftQ
 
-newtype Q a = Q { unQ :: ReaderT Connection IO a }
-  deriving (Functor, Applicative, Monad, MonadReader Connection)
-
-unsafeIOToTransaction :: Transaction t => IO a -> t a
+unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
-unsafeIOToQ :: IO a -> Q a
-unsafeIOToQ = Q . liftIO
-
-runTransaction' :: Q a -> Pool Connection -> IO a
-runTransaction' q p = runT q p (withRetry 1)
+runQ :: forall a . Q a -> Pool Connection -> IO a
+runQ q p = withRetry 1 runT
   where
     withRetry n act = act `catchRecoverableExceptions` handler n act
     handler n act (SomeException e) =
@@ -89,21 +83,17 @@ runTransaction' q p = runT q p (withRetry 1)
       , Handler $ \(e :: Deadlock)                  -> throwIO e
       , Handler $ \(e :: SomeException)             -> h e
       ]
-    runT :: Q a -> Pool Connection -> (IO a -> IO a) -> IO a
-    runT t pc catchExc = usePool pc $ \conn
-      -> catchExc
-       . PG.withTransaction conn
-       . flip runReaderT conn
-       . unQ $ t
+    runT = withResource p $ \conn ->
+      PG.withTransaction conn . flip runReaderT conn . unQ $ q
 
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
+instance MonadPool (ReaderT (Pool Connection) IO) where
+  runTransaction t = ask >>= lift . runQ t
+
 instance MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
-
-instance MonadPool (ReaderT (Pool Connection) IO) where
-  runTransaction t = ask >>= lift . runTransaction' t
 
 instance (MonadPool m, Error e) => MonadPool (ErrorT e m) where
   runTransaction = lift . runTransaction
@@ -113,14 +103,6 @@ instance MonadPool m => MonadPool (ExceptT e m) where
 
 instance MonadPool m => MonadPool (MaybeT m) where
   runTransaction = lift . runTransaction
-
-runPoolReader :: ConnectInfo -> ReaderT (Pool Connection) IO b -> IO b
-runPoolReader cfg q = do
-  pool <- createPGPool cfg
-  runReaderT q pool
-
-usePool :: MonadIO m => Pool Connection -> (Connection -> IO a) -> m a
-usePool p f = liftIO $ withResource p f
 
 createPGPool :: ConnectInfo -> IO (Pool Connection)
 createPGPool connectInfo = createPool (PG.connect connectInfo) PG.close 10 5 10

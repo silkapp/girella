@@ -1,5 +1,8 @@
 {-# LANGUAGE TypeFamilies #-}
-module Silk.Opaleye.TypeFams where
+module Silk.Opaleye.To
+  ( To
+  , MapTo
+  ) where
 
 -- | Allows you to write To Column Person instead of Person (Column a) (Column b) [..]
 type family To (a :: * -> *) (b :: *) :: *

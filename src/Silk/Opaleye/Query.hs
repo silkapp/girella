@@ -32,9 +32,9 @@ import Silk.Opaleye.Transaction
 
 -- | runInsert inside a Transaction
 runInsert :: Transaction m => Table columns columns' -> columns -> m ()
-runInsert tab q = liftQ . Q $ do
+runInsert tab q = liftQ $ do
   conn <- ask
-  liftIO $ void $ M.runInsert conn tab q
+  unsafeIOToTransaction $ void $ M.runInsert conn tab q
 
 -- | runInsertReturning inside a Transaction
 runInsertReturning
@@ -46,15 +46,15 @@ runInsertReturning
   -> columnsW
   -> (columnsR -> returned)
   -> m [haskells]
-runInsertReturning tab ins ret = liftQ . Q $ do
+runInsertReturning tab ins ret = liftQ $ do
   conn <- ask
-  liftIO $ M.runInsertReturning conn tab ins ret
+  unsafeIOToTransaction $ M.runInsertReturning conn tab ins ret
 
 -- | runUpdate inside a Transaction
 runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column Bool) -> m Int64
 runUpdate tab upd cond = liftQ $ do
   conn <- ask
-  unsafeIOToQ $ M.runUpdate conn tab upd (toPGBool . cond)
+  unsafeIOToTransaction $ M.runUpdate conn tab upd (toPGBool . cond)
 
 -- | Update without using the current values
 runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column Bool) -> m Int64
@@ -63,7 +63,7 @@ runUpdateConst tab me cond = runUpdate tab (const me) cond
 runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column Bool) -> m Int64
 runDelete tab cond = liftQ $ do
   conn <- ask
-  unsafeIOToQ $ M.runDelete conn tab (toPGBool . cond)
+  unsafeIOToTransaction $ M.runDelete conn tab (toPGBool . cond)
 
 -- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
 runQueryInternal
@@ -71,9 +71,9 @@ runQueryInternal
      , Transaction m
      )
   => Query columns -> m [haskells]
-runQueryInternal q = liftQ . Q $ do
+runQueryInternal q = liftQ  $ do
   conn <- ask
-  liftIO $ M.runQuery conn $ q
+  unsafeIOToTransaction $ M.runQuery conn $ q
 
 -- | Run a query and convert the result using Conv.
 runQuery :: ( Default QueryRunner columns haskells

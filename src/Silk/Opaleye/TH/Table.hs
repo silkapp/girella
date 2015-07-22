@@ -30,7 +30,7 @@ import Opaleye.Column
 import Opaleye.Table
 
 import Silk.Opaleye.TH.Util
-import Silk.Opaleye.TypeFams
+import Silk.Opaleye.To
 
 makeTypes :: Q [Dec] -> Q [Dec]
 makeTypes decls =

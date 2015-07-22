@@ -29,8 +29,9 @@ module Silk.Opaleye
   , module Silk.Opaleye.Operators
   , module Silk.Opaleye.Query
   , module Silk.Opaleye.Range
+  , module Silk.Opaleye.To
   , module Silk.Opaleye.Transaction
-  , module Silk.Opaleye.TypeFams
+  , Q
   , ShowConstant (..)
   ) where
 
@@ -56,5 +57,6 @@ import Silk.Opaleye.Query
 import Silk.Opaleye.Range
 import Silk.Opaleye.ShowConstant
 import Silk.Opaleye.TH
+import Silk.Opaleye.To
 import Silk.Opaleye.Transaction
-import Silk.Opaleye.TypeFams
+import Silk.Opaleye.Transaction.Q (Q)
