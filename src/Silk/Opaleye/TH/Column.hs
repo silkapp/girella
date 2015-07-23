@@ -120,8 +120,8 @@ fromFieldAux fromDb f mdata = case mdata of
   Nothing  -> returnError UnexpectedNull f ""
 
 compEqualP :: Type -> Type -> Pred
+#if MIN_VERSION_template_haskell(2,10,0)
+compEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
+#else
 compEqualP = EqualP
--- #if MIN_VERSION_template_haskell(2,10,0)
--- compEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
--- #else
--- #endif
+#endif
