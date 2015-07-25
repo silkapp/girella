@@ -52,7 +52,7 @@ leftJoin ::
   => Query columnsA -> Query columnsB
   -> ((columnsA, columnsB) -> Column Bool)
   -> Query (columnsA, nullableColumnsB)
-leftJoin a b f = J.leftJoin a b (toPGBool . f)
+leftJoin a b f = J.leftJoin a b (safeCoerceToRep . f)
 
 restrict :: QueryArr (Column Bool) ()
-restrict = O.restrict . arr unsafeCoerce
+restrict = O.restrict . arr safeCoerceToRep

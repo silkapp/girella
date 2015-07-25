@@ -54,7 +54,7 @@ runInsertReturning tab ins ret = liftQ $ do
 runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column Bool) -> m Int64
 runUpdate tab upd cond = liftQ $ do
   conn <- ask
-  unsafeIOToTransaction $ M.runUpdate conn tab upd (toPGBool . cond)
+  unsafeIOToTransaction $ M.runUpdate conn tab upd (safeCoerceToRep . cond)
 
 -- | Update without using the current values
 runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column Bool) -> m Int64
@@ -63,7 +63,7 @@ runUpdateConst tab = runUpdate tab . const
 runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column Bool) -> m Int64
 runDelete tab cond = liftQ $ do
   conn <- ask
-  unsafeIOToTransaction $ M.runDelete conn tab (toPGBool . cond)
+  unsafeIOToTransaction $ M.runDelete conn tab (safeCoerceToRep . cond)
 
 -- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
 runQueryInternal

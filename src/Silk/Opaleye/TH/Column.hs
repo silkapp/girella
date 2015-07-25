@@ -14,7 +14,7 @@ module Silk.Opaleye.TH.Column
   , Nullable
   , Column
   , fieldQueryRunnerColumn
-  , unsafeCoerce
+  , unsafeCoerceColumn
   ) where
 
 import Control.Applicative ((<$>))
@@ -27,9 +27,10 @@ import Data.String.Conversions (cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
                                              returnError)
 import Language.Haskell.TH
-import Opaleye.Column (Column, Nullable, unsafeCoerce)
+import Opaleye.Column (Column, Nullable)
 import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..), fieldQueryRunnerColumn)
 
+import Silk.Opaleye.Compat (unsafeCoerceColumn)
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util (getConNameTy, ty)
 
@@ -85,7 +86,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb = do
           , FunD (mkName "constant")
             [ Clause []
               (NormalB $ InfixE
-               (Just (VarE (mkName "unsafeCoerce")))
+               (Just (VarE (mkName "unsafeCoerceColumn")))
                (VarE (mkName "."))
                (Just (InfixE (Just (VarE (mkName "constant"))) (VarE (mkName ".")) (Just (VarE toDb))))
               )

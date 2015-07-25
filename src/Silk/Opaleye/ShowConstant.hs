@@ -1,6 +1,7 @@
 {-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
-    FlexibleInstances
+    CPP
+  , FlexibleInstances
   , MultiParamTypeClasses
   , NoMonomorphismRestriction
   , ScopedTypeVariables
@@ -9,6 +10,9 @@
   #-}
 module Silk.Opaleye.ShowConstant
   ( ShowConstant (..)
+  , safeCoerceToRep
+  , safeCoerceFromRep
+  , safelyWrapped
   , TString (..)
   , TInt4 (..)
   , TInt8 (..)
@@ -19,9 +23,7 @@ module Silk.Opaleye.ShowConstant
   , TTimestamp (..)
   , TTime (..)
   , TCIText (..)
-  , TOrd
-  , toPGBool
-  , fromPGBool
+  , PGOrd
   ) where
 
 import Data.CaseInsensitive (CI)
@@ -32,14 +34,29 @@ import Data.UUID (UUID)
 import qualified Data.Text      as S
 import qualified Data.Text.Lazy as L
 
-import Opaleye.Column (Column, unsafeCoerce)
-import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..))
+import Opaleye.Column (Column)
 import Opaleye.PGTypes
-import Opaleye.RunQuery
+import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
+#if MIN_VERSION_opaleye(0,4,0)
+import Opaleye.Order (PGOrd)
+#endif
+
+import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+
+import Opaleye.Column ()
 
 class ShowConstant a where
   type PGRep a :: *
   constant :: a -> Column a
+
+safeCoerceToRep :: PGRep a ~ b => Column a -> Column b
+safeCoerceToRep = unsafeCoerceColumn
+
+safeCoerceFromRep :: PGRep a ~ b => Column b -> Column a
+safeCoerceFromRep = unsafeCoerceColumn
+
+safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
+safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
 instance ShowConstant [Char] where
   type PGRep String = PGText
@@ -125,19 +142,19 @@ instance QueryRunnerColumnDefault (CI L.Text) (CI L.Text) where
   queryRunnerColumnDefault = qrcDef
 
 qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
-qrcDef = queryRunnerColumn (unsafeCoerce :: Column a -> Column b) id queryRunnerColumnDefault
+qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRunnerColumnDefault
 
 class TString a where
   constantString :: a -> Column a
 
 instance TString [Char] where
-  constantString = unsafeCoerce . pgString
+  constantString = safeCoerceFromRep . pgString
 
 instance TString StrictText where
-  constantString = unsafeCoerce . pgStrictText
+  constantString = safeCoerceFromRep . pgStrictText
 
 instance TString LazyText where
-  constantString = unsafeCoerce . pgLazyText
+  constantString = safeCoerceFromRep . pgLazyText
 
 class TInt4 a where
   constantInt4 :: a -> Column a
@@ -146,70 +163,65 @@ class TInt8 a where
   constantInt8 :: a -> Column a
 
 instance TInt4 Int where
-  constantInt4 = unsafeCoerce . pgInt4
+  constantInt4 = safeCoerceFromRep . pgInt4
 
 instance TInt8 Int64 where
-  constantInt8 = unsafeCoerce . pgInt8
+  constantInt8 = safeCoerceFromRep . pgInt8
 
 class TDouble a where
   constantDouble :: a -> Column a
 
 instance TDouble Double where
-  constantDouble = unsafeCoerce . pgDouble
+  constantDouble = safeCoerceFromRep . pgDouble
 
 class TBool a where
   constantBool :: a -> Column a
 
-toPGBool :: Column Bool -> Column PGBool
-toPGBool = unsafeCoerce
-
-fromPGBool :: Column PGBool -> Column Bool
-fromPGBool = unsafeCoerce
-
 instance TBool Bool where
-  constantBool = unsafeCoerce . pgBool
+  constantBool = safeCoerceFromRep . pgBool
 
 class TUUID a where
   constantUUID :: a -> Column a
 
 instance TUUID UUID where
-  constantUUID = unsafeCoerce . pgUUID
+  constantUUID = safeCoerceFromRep . pgUUID
 
 class TDate a where
   constantDay :: a -> Column a
 
 instance TDate Day where
-  constantDay = unsafeCoerce . pgDay
+  constantDay = safeCoerceFromRep . pgDay
 
 class TTimestamptz a where
   constantTimestamptz :: a -> Column a
 
 instance TTimestamptz UTCTime where
-  constantTimestamptz = unsafeCoerce . pgUTCTime
+  constantTimestamptz = safeCoerceFromRep . pgUTCTime
 
 class TTimestamp a where
   constantTimestamp :: a -> Column a
 
 instance TTimestamp LocalTime where
-  constantTimestamp = unsafeCoerce . pgLocalTime
+  constantTimestamp = safeCoerceFromRep . pgLocalTime
 
 class TTime a where
   constantTime :: a -> Column a
 
 instance TTime TimeOfDay where
-  constantTime = unsafeCoerce . pgTimeOfDay
+  constantTime = safeCoerceFromRep . pgTimeOfDay
 
 class TCIText a where
   constantCIText :: a -> Column a
 
 instance TCIText (CI StrictText) where
-  constantCIText = unsafeCoerce . pgCiStrictText
+  constantCIText = safeCoerceFromRep . pgCiStrictText
 
 instance TCIText (CI LazyText) where
-  constantCIText = unsafeCoerce . pgCiLazyText
+  constantCIText = safeCoerceFromRep . pgCiLazyText
 
-class TOrd a
-
-instance TOrd Int
-instance TOrd Int64
-instance TOrd UTCTime
+#if !MIN_VERSION_opaleye(0,4,0)
+class PGOrd a
+#endif
+instance PGOrd Int
+instance PGOrd Int64
+instance PGOrd UTCTime

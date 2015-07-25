@@ -1,3 +1,4 @@
+{-# LANGUAGE TypeFamilies #-}
 module Silk.Opaleye.Operators
   ( (.==)
   , (.==?)
@@ -28,6 +29,7 @@ import Control.Category ((.))
 import Data.Foldable
 
 import Opaleye.Column (toNullable, unsafeCast)
+import Opaleye.PGTypes (PGText)
 import qualified Opaleye.Column    as C
 import qualified Opaleye.Operators as O
 
@@ -38,43 +40,43 @@ infix 4 .==
 -- | Equality between columns, does not allow comparison on Nullable
 -- to avoid confusion since SQL and haskell semantics differ there.
 (.==) :: ShowConstant a => Column a -> Column a -> Column Bool
-a .== b = fromPGBool $ a O..== b
+a .== b = safeCoerceFromRep $ a O..== b
 
 infix 4 .==?
 -- | Compare two nullables with SQL semantics, null /= null
 (.==?) :: ShowConstant a => Column (Nullable a) -> Column (Nullable a) -> Column Bool
-a .==? b = fromPGBool $ a O..== b
+a .==? b = safeCoerceFromRep $ a O..== b
 
 infix 4 ./=
 (./=) :: ShowConstant a => Column a -> Column a -> Column Bool
-a ./= b = fromPGBool $ a O../= b
+a ./= b = safeCoerceFromRep $ a O../= b
 
 infixr 2 .||
 (.||) :: Column Bool -> Column Bool -> Column Bool
-a .|| b = fromPGBool $ toPGBool a O..|| toPGBool b
+a .|| b = safeCoerceFromRep $ safeCoerceToRep a O..|| safeCoerceToRep b
 
 infixr 3 .&&
 (.&&) :: Column Bool -> Column Bool -> Column Bool
-a .&& b = fromPGBool $ toPGBool a O..&& toPGBool b
+a .&& b = safeCoerceFromRep $ safeCoerceToRep a O..&& safeCoerceToRep b
 
 infix 4 .>
-(.>) :: TOrd a => Column a -> Column a -> Column Bool
-a .> b = fromPGBool $ a O..> b
+(.>) :: PGOrd a => Column a -> Column a -> Column Bool
+a .> b = safeCoerceFromRep $ a O..> b
 
 infix 4 .<
-(.<) :: TOrd a => Column a -> Column a -> Column Bool
-a .< b = fromPGBool $ a O..< b
+(.<) :: PGOrd a => Column a -> Column a -> Column Bool
+a .< b = safeCoerceFromRep $ a O..< b
 
 infix 4 .>=
-(.>=) :: TOrd a => Column a -> Column a -> Column Bool
-a .>= b = fromPGBool $ a O..>= b
+(.>=) :: PGOrd a => Column a -> Column a -> Column Bool
+a .>= b = safeCoerceFromRep $ a O..>= b
 
 infix 4 .<=
-(.<=) :: TOrd a => Column a -> Column a -> Column Bool
-a .<= b = fromPGBool $ a O..<= b
+(.<=) :: PGOrd a => Column a -> Column a -> Column Bool
+a .<= b = safeCoerceFromRep $ a O..<= b
 
-lower :: TString a => Column a -> Column a
-lower = unsafeCoerce . O.lower . unsafeCoerce
+lower :: PGRep a ~ PGText => Column a -> Column a
+lower = safeCoerceFromRep . O.lower . safeCoerceToRep
 
 -- Query helpers
 
@@ -96,13 +98,13 @@ notIn hs w = ands . map (./= w) $ hs
 
 -- | 'isJust' for 'Column'.
 isNull :: Column (Nullable a) -> Column Bool
-isNull = fromPGBool . C.isNull
+isNull = safeCoerceFromRep . C.isNull
 
 -- Avoiding clashes with prelude
 
 -- | Boolean negation.
 not_ :: Column Bool -> Column Bool
-not_ = fromPGBool . O.not . toPGBool
+not_ = safeCoerceFromRep . O.not . safeCoerceToRep
 
 -- | 'Nothing' for 'Column's.
 null_ :: Column (Nullable a)

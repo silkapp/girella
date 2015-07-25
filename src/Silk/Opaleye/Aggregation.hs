@@ -1,3 +1,8 @@
+{-# LANGUAGE
+    FlexibleContexts
+  , NoMonomorphismRestriction
+  , TypeFamilies
+  #-}
 module Silk.Opaleye.Aggregation
   ( Aggregator
   , aggregate
@@ -5,8 +10,8 @@ module Silk.Opaleye.Aggregation
   , boolOr
   , count
   , groupBy
-  , maxColumn
-  , minColumn
+  , maxAggr
+  , minAggr
   ) where
 
 import Data.Profunctor (dimap)
@@ -15,16 +20,16 @@ import Opaleye.Aggregate (Aggregator, aggregate, count, groupBy)
 import Opaleye.Column (Column)
 import qualified Opaleye.Aggregate as A (boolAnd, boolOr, max, min)
 
-import Silk.Opaleye.ShowConstant (fromPGBool, toPGBool)
+import Silk.Opaleye.ShowConstant
 
 boolOr :: Aggregator (Column Bool) (Column Bool)
-boolOr = dimap toPGBool fromPGBool A.boolOr
+boolOr = dimap safeCoerceToRep safeCoerceFromRep A.boolOr
 
 boolAnd :: Aggregator (Column Bool) (Column Bool)
-boolAnd = dimap toPGBool fromPGBool A.boolAnd
+boolAnd = dimap safeCoerceToRep safeCoerceFromRep A.boolAnd
 
-maxColumn :: Aggregator (Column a) (Column a)
-maxColumn = A.max
+maxAggr :: PGOrd a => Aggregator (Column a) (Column a)
+maxAggr = A.max
 
-minColumn :: Aggregator (Column a) (Column a)
-minColumn = A.min
+minAggr :: PGOrd a => Aggregator (Column a) (Column a)
+minAggr = A.min
