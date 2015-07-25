@@ -1,4 +1,7 @@
-{-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE
+    ScopedTypeVariables
+  , TypeFamilies
+  #-}
 module Silk.Opaleye.Operators
   ( (.==)
   , (.==?)
@@ -60,20 +63,32 @@ infixr 3 .&&
 a .&& b = safeCoerceFromRep $ safeCoerceToRep a O..&& safeCoerceToRep b
 
 infix 4 .>
-(.>) :: PGOrd a => Column a -> Column a -> Column Bool
-a .> b = safeCoerceFromRep $ a O..> b
+(.>) :: forall a . TOrd a => Column a -> Column a -> Column Bool
+a .> b = safeCoerceFromRep $ coerce a O..> coerce b
+  where
+    coerce :: Column a -> Column (OrdRep a)
+    coerce = unsafeCoerceColumn
 
 infix 4 .<
-(.<) :: PGOrd a => Column a -> Column a -> Column Bool
-a .< b = safeCoerceFromRep $ a O..< b
+(.<) :: forall a. TOrd a => Column a -> Column a -> Column Bool
+a .< b = safeCoerceFromRep $ coerce a O..< coerce b
+  where
+    coerce :: Column a -> Column (OrdRep a)
+    coerce = unsafeCoerceColumn
 
 infix 4 .>=
-(.>=) :: PGOrd a => Column a -> Column a -> Column Bool
-a .>= b = safeCoerceFromRep $ a O..>= b
+(.>=) :: TOrd a => Column a -> Column a -> Column Bool
+a .>= b = safeCoerceFromRep $ coerce a O..>= coerce b
+  where
+    coerce :: Column a -> Column (OrdRep a)
+    coerce = unsafeCoerceColumn
 
 infix 4 .<=
-(.<=) :: PGOrd a => Column a -> Column a -> Column Bool
-a .<= b = safeCoerceFromRep $ a O..<= b
+(.<=) :: TOrd a => Column a -> Column a -> Column Bool
+a .<= b = safeCoerceFromRep $ coerce a O..<= coerce b
+  where
+    coerce :: Column a -> Column (OrdRep a)
+    coerce = unsafeCoerceColumn
 
 lower :: PGRep a ~ PGText => Column a -> Column a
 lower = safeCoerceFromRep . O.lower . safeCoerceToRep

@@ -1,6 +1,7 @@
 {-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
     CPP
+  , FlexibleContexts
   , FlexibleInstances
   , MultiParamTypeClasses
   , NoMonomorphismRestriction
@@ -23,7 +24,7 @@ module Silk.Opaleye.ShowConstant
   , TTimestamp (..)
   , TTime (..)
   , TCIText (..)
-  , PGOrd
+  , TOrd (..)
   ) where
 
 import Data.CaseInsensitive (CI)
@@ -37,13 +38,8 @@ import qualified Data.Text.Lazy as L
 import Opaleye.Column (Column)
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
-#if MIN_VERSION_opaleye(0,4,0)
-import Opaleye.Order (PGOrd)
-#endif
 
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
-
-import Opaleye.Column ()
+import Silk.Opaleye.Compat (PGOrd, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 
 class ShowConstant a where
   type PGRep a :: *
@@ -219,9 +215,10 @@ instance TCIText (CI StrictText) where
 instance TCIText (CI LazyText) where
   constantCIText = safeCoerceFromRep . pgCiLazyText
 
-#if !MIN_VERSION_opaleye(0,4,0)
-class PGOrd a
-#endif
-instance PGOrd Int
-instance PGOrd Int64
-instance PGOrd UTCTime
+class PGOrd (OrdRep a) => TOrd a where
+  type OrdRep a :: *
+  type OrdRep a = PGRep a
+
+instance TOrd Int
+instance TOrd Int64
+instance TOrd UTCTime
