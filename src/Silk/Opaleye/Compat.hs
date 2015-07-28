@@ -1,4 +1,8 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE
+    CPP
+  , FlexibleInstances
+  , TypeSynonymInstances
+  #-}
 module Silk.Opaleye.Compat
   ( unsafeCoerceColumn
   , QueryRunnerColumnDefault (..)
@@ -12,6 +16,7 @@ import Opaleye.RunQuery (QueryRunnerColumnDefault (..))
 #else
 import Opaleye.Column (Column, unsafeCoerce)
 import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..))
+import Opaleye.PGTypes
 #endif
 
 #if !MIN_VERSION_opaleye(0,4,0)
@@ -21,4 +26,9 @@ unsafeCoerceColumn = unsafeCoerce
 
 #if !MIN_VERSION_opaleye(0,4,0)
 class PGOrd a
+instance PGOrd PGInt4
+instance PGOrd PGInt8
+instance PGOrd PGTimestamptz
+instance PGOrd PGText
+instance PGOrd PGCitext
 #endif

@@ -8,15 +8,11 @@ module Silk.Opaleye
 
   , module Opaleye.PGTypes
   , Nullable
-  , Order
   , Query
   , QueryArr
   , Column
-  , asc
-  , desc
   , fieldQueryRunnerColumn
   , matchNullable
-  , orderBy
   , queryTable
   , required
   , optional
@@ -31,6 +27,7 @@ module Silk.Opaleye
   , module Silk.Opaleye.Range
   , module Silk.Opaleye.To
   , module Silk.Opaleye.Transaction
+  , module Silk.Opaleye.Order
   , Q
   , ShowConstant (..)
   ) where
@@ -43,7 +40,6 @@ import Data.Profunctor (lmap)
 import Database.PostgreSQL.Simple (Connection)
 
 import Opaleye.Column (matchNullable, toNullable)
-import Opaleye.Order (Order, asc, desc, orderBy)
 import Opaleye.PGTypes
 import Opaleye.QueryArr (Query, QueryArr)
 import Opaleye.Table (optional, queryTable, required)
@@ -53,6 +49,7 @@ import Silk.Opaleye.Combinators
 import Silk.Opaleye.Conv
 import Silk.Opaleye.Misc
 import Silk.Opaleye.Operators
+import Silk.Opaleye.Order
 import Silk.Opaleye.Query
 import Silk.Opaleye.Range
 import Silk.Opaleye.ShowConstant

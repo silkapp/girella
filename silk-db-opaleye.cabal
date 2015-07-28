@@ -23,6 +23,7 @@ library
     Silk.Opaleye.Json
     Silk.Opaleye.Misc
     Silk.Opaleye.Operators
+    Silk.Opaleye.Order
     Silk.Opaleye.Query
     Silk.Opaleye.Range
     Silk.Opaleye.Run

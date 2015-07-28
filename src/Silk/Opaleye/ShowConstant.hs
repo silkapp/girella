@@ -24,7 +24,9 @@ module Silk.Opaleye.ShowConstant
   , TTimestamp (..)
   , TTime (..)
   , TCIText (..)
+  , PGOrd
   , TOrd (..)
+  , ordCoerce
   ) where
 
 import Data.CaseInsensitive (CI)
@@ -219,6 +221,14 @@ class PGOrd (OrdRep a) => TOrd a where
   type OrdRep a :: *
   type OrdRep a = PGRep a
 
+ordCoerce :: Column b -> Column (OrdRep b)
+ordCoerce = unsafeCoerceColumn
+
 instance TOrd Int
 instance TOrd Int64
 instance TOrd UTCTime
+instance TOrd String
+instance TOrd LazyText
+instance TOrd StrictText
+instance TOrd (CI LazyText)
+instance TOrd (CI StrictText)
