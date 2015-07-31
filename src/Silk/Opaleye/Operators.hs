@@ -1,5 +1,6 @@
 {-# LANGUAGE
     FlexibleContexts
+  , NoMonomorphismRestriction
   , ScopedTypeVariables
   , TypeFamilies
   #-}
@@ -16,7 +17,7 @@ module Silk.Opaleye.Operators
   , lower
   , ors
   , ands
-  , in_ -- TODO rename
+  , in_
   , notIn
   , isNull
   , not_
@@ -33,7 +34,7 @@ import Control.Category ((.))
 import Data.Foldable
 
 import Opaleye.Column (toNullable, unsafeCast)
-import Opaleye.PGTypes (PGText)
+import Opaleye.PGTypes (PGBool, PGText, pgBool)
 import qualified Opaleye.Column    as C
 import qualified Opaleye.Operators as O
 
@@ -56,27 +57,27 @@ infix 4 ./=
 a ./= b = safeCoerceFromRep $ a O../= b
 
 infixr 2 .||
-(.||) :: Column Bool -> Column Bool -> Column Bool
+(.||) :: PGRep a ~ PGBool => Column a -> Column a -> Column a
 a .|| b = safeCoerceFromRep $ safeCoerceToRep a O..|| safeCoerceToRep b
 
 infixr 3 .&&
-(.&&) :: Column Bool -> Column Bool -> Column Bool
+(.&&) :: PGRep a ~ PGBool => Column a -> Column a -> Column a
 a .&& b = safeCoerceFromRep $ safeCoerceToRep a O..&& safeCoerceToRep b
 
 infix 4 .>
-(.>) :: (ShowConstant a, PGOrd (PGRep a)) => Column a -> Column a -> Column Bool
-a .> b = safeCoerceFromRep $ safeCoerceToRep a O..> safeCoerceFromRep b
+(.>) :: PGOrd (PGRep a)  => Column a -> Column a -> Column Bool
+a .> b = safeCoerceFromRep $ safeCoerceToRep a O..> safeCoerceToRep b
 
 infix 4 .<
-(.<) :: (ShowConstant a, PGOrd (PGRep a)) => Column a -> Column a -> Column Bool
+(.<) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .< b = safeCoerceFromRep $ safeCoerceToRep a O..< safeCoerceToRep b
 
 infix 4 .>=
-(.>=) :: (ShowConstant a, PGOrd (PGRep a)) => Column a -> Column a -> Column Bool
+(.>=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .>= b = safeCoerceFromRep $ safeCoerceToRep a O..>= safeCoerceToRep b
 
 infix 4 .<=
-(.<=) :: (ShowConstant a, PGOrd (PGRep a)) => Column a -> Column a -> Column Bool
+(.<=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .<= b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
 
 lower :: PGRep a ~ PGText => Column a -> Column a
@@ -85,12 +86,12 @@ lower = safeCoerceFromRep . O.lower . safeCoerceToRep
 -- Query helpers
 
 -- | 'Data.list.any' for 'Column'
-ors :: Foldable f => f (Column Bool) -> Column Bool
-ors = foldr (.||) (constant False)
+ors :: (PGRep a ~ PGBool, Foldable f) => f (Column a) -> Column Bool
+ors = safeCoerceFromRep . foldr (\a b -> safeCoerceToRep a O..|| b) (pgBool False)
 
 -- | 'Data.List.all' for 'Column'
-ands :: Foldable f => f (Column Bool) -> Column Bool
-ands = foldr (.&&) (constant True)
+ands :: (PGRep a ~ PGBool, Foldable f) => f (Column a) -> Column Bool
+ands = safeCoerceFromRep . foldr (\a b -> safeCoerceToRep a O..&& b) (pgBool True)
 
 -- | 'Data.List.elem' for Column.
 in_ :: ShowConstant o => [Column o] -> Column o -> Column Bool
@@ -107,7 +108,7 @@ isNull = safeCoerceFromRep . C.isNull
 -- Avoiding clashes with prelude
 
 -- | Boolean negation.
-not_ :: Column Bool -> Column Bool
+not_ :: PGRep a ~ PGBool => Column a -> Column a
 not_ = safeCoerceFromRep . O.not . safeCoerceToRep
 
 -- | 'Nothing' for 'Column's.
