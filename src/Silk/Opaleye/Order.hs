@@ -12,8 +12,8 @@ import qualified Opaleye.Order as O
 
 import Silk.Opaleye.ShowConstant
 
-asc :: (TOrd b, PGOrd (OrdRep b)) => (a -> Column b) -> Order a
-asc f = O.asc $ ordCoerce . f
+asc :: (ShowConstant b, PGOrd (PGRep b)) => (a -> Column b) -> Order a
+asc f = O.asc $ safeCoerceToRep . f
 
-desc :: (TOrd b, PGOrd (OrdRep b)) => (a -> Column b) -> Order a
-desc f = O.desc $ ordCoerce . f
+desc :: (ShowConstant b, PGOrd (PGRep b)) => (a -> Column b) -> Order a
+desc f = O.desc $ safeCoerceToRep . f

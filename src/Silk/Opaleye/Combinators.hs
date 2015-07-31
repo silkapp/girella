@@ -7,6 +7,8 @@ module Silk.Opaleye.Combinators
   , whereEq
   , innerJoinOn
   , leftJoin
+  -- * Re-exports
+  , restrict
   ) where
 
 import Prelude hiding (foldr, id, (.))

@@ -1,6 +1,5 @@
 {-# LANGUAGE
     FlexibleContexts
-  , ScopedTypeVariables
   , TypeFamilies
   #-}
 module Silk.Opaleye.Aggregation
@@ -14,33 +13,28 @@ module Silk.Opaleye.Aggregation
   , minAggr
   ) where
 
-import Data.Profunctor (dimap)
+import Data.Profunctor (Profunctor, dimap)
 
 import Opaleye.Aggregate (Aggregator, aggregate, count, groupBy)
 import Opaleye.Column (Column)
+import Opaleye.PGTypes (PGBool)
 import qualified Opaleye.Aggregate as A (boolAnd, boolOr, max, min)
 
-import Silk.Opaleye.Compat (unsafeCoerceColumn)
 import Silk.Opaleye.ShowConstant
 
-boolOr :: Aggregator (Column Bool) (Column Bool)
-boolOr = dimap unsafeCoerceColumn unsafeCoerceColumn A.boolOr
+boolOr :: (ShowConstant a, PGRep a ~ PGBool) => Aggregator (Column a) (Column a)
+boolOr = safeAgg A.boolOr
 
-boolAnd :: Aggregator (Column Bool) (Column Bool)
-boolAnd = dimap unsafeCoerceColumn unsafeCoerceColumn A.boolAnd
+boolAnd :: (ShowConstant a, PGRep a ~ PGBool) => Aggregator (Column a) (Column a)
+boolAnd = safeAgg A.boolAnd
 
-maxAggr :: forall a. TOrd a => Aggregator (Column a) (Column a)
-maxAggr = dimap toRep fromRep A.max
-  where
-    toRep :: Column a -> Column (OrdRep a)
-    toRep = unsafeCoerceColumn
-    fromRep :: Column (OrdRep a) -> Column a
-    fromRep = unsafeCoerceColumn
+maxAggr :: (ShowConstant a, PGOrd (PGRep a)) => Aggregator (Column a) (Column a)
+maxAggr = safeAgg A.max
 
-minAggr :: forall a. TOrd a => Aggregator (Column a) (Column a)
-minAggr = dimap toRep fromRep A.min
-  where
-    toRep :: Column a -> Column (OrdRep a)
-    toRep = unsafeCoerceColumn
-    fromRep :: Column (OrdRep a) -> Column a
-    fromRep = unsafeCoerceColumn
+minAggr :: (ShowConstant a, PGOrd (PGRep a)) => Aggregator (Column a) (Column a)
+minAggr = safeAgg A.min
+
+safeAgg :: Profunctor p
+  => p (Column (PGRep a)) (Column (PGRep b))
+  -> p (Column        a ) (Column        b )
+safeAgg = dimap safeCoerceToRep safeCoerceFromRep
