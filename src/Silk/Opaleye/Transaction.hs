@@ -60,8 +60,8 @@ instance Transaction m => Transaction (IdentityT m) where
 unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
-runQ :: forall c a . Config c -> Q a -> IO a
-runQ cfg q = do
+runTransaction' :: forall c a . Config c -> Q a -> IO a
+runTransaction' cfg q = do
   c <- beforeTransaction cfg
   res <- withRetry c 1
     $ withResource (connectionPool cfg)
@@ -89,7 +89,7 @@ class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
 instance MonadPool (ReaderT (Config a) IO) where
-  runTransaction t = ask >>= lift . (`runQ` t)
+  runTransaction t = ask >>= lift . (`runTransaction'` t)
 
 instance MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
