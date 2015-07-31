@@ -14,17 +14,6 @@ module Silk.Opaleye.ShowConstant
   , safeCoerceToRep
   , safeCoerceFromRep
   , safelyWrapped
-  , TString (..)
-  , TInt4 (..)
-  , TInt8 (..)
-  , TDouble (..)
-  , TUUID (..)
-  , TDate (..)
-  , TTimestamptz (..)
-  , TTimestamp (..)
-  , TTime (..)
-  , TCIText (..)
-  , PGOrd
   ) where
 
 import Data.CaseInsensitive (CI)
@@ -39,7 +28,7 @@ import Opaleye.Column (Column)
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
 
-import Silk.Opaleye.Compat (PGOrd, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 
 class ShowConstant a where
   type PGRep a :: *
@@ -56,161 +45,87 @@ safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
 instance ShowConstant [Char] where
   type PGRep String = PGText
-  constant = constantString
+  constant = safeCoerceFromRep . pgString
 instance QueryRunnerColumnDefault [Char] [Char] where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant StrictText where
   type PGRep S.Text = PGText
-  constant = constantString
-instance QueryRunnerColumnDefault S.Text S.Text where
+  constant = safeCoerceFromRep . pgStrictText
+instance QueryRunnerColumnDefault StrictText StrictText where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant LazyText where
   type PGRep L.Text = PGText
-  constant = constantString
-instance QueryRunnerColumnDefault L.Text L.Text where
+  constant = safeCoerceFromRep . pgLazyText
+instance QueryRunnerColumnDefault LazyText LazyText where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Int where
   type PGRep Int = PGInt4
-  constant = constantInt4
+  constant = safeCoerceFromRep . pgInt4
 instance QueryRunnerColumnDefault Int Int where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Int64 where
   type PGRep Int64 = PGInt8
-  constant = constantInt8
+  constant = safeCoerceFromRep . pgInt8
 instance QueryRunnerColumnDefault Int64 Int64 where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Double where
   type PGRep Double = PGFloat8
-  constant = constantDouble
+  constant = safeCoerceFromRep . pgDouble
 instance QueryRunnerColumnDefault Double Double where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Bool where
-  type PGRep Bool = PGBool ; constant = constantBool
+  type PGRep Bool = PGBool
+  constant = safeCoerceFromRep . pgBool
 instance QueryRunnerColumnDefault Bool Bool where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant UUID where
   type PGRep UUID = PGUuid
-  constant = constantUUID
+  constant = safeCoerceFromRep . pgUUID
 instance QueryRunnerColumnDefault UUID UUID where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant Day where
   type PGRep Day = PGDate
-  constant = constantDay
+  constant = safeCoerceFromRep . pgDay
 instance QueryRunnerColumnDefault Day Day where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant UTCTime where
   type PGRep UTCTime = PGTimestamptz
-  constant = constantTimestamptz
+  constant = safeCoerceFromRep . pgUTCTime
 instance QueryRunnerColumnDefault UTCTime UTCTime where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant LocalTime where
   type PGRep LocalTime = PGTimestamp
-  constant = constantTimestamp
+  constant = safeCoerceFromRep . pgLocalTime
 instance QueryRunnerColumnDefault LocalTime LocalTime where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant TimeOfDay where
   type PGRep TimeOfDay = PGTime
-  constant = constantTime
+  constant = safeCoerceFromRep . pgTimeOfDay
 instance QueryRunnerColumnDefault TimeOfDay TimeOfDay where
   queryRunnerColumnDefault = qrcDef
 
-instance ShowConstant (CI S.Text) where
-  type PGRep (CI S.Text) = PGCitext
-  constant = constantCIText
-instance QueryRunnerColumnDefault (CI S.Text) (CI S.Text) where
+instance ShowConstant (CI StrictText) where
+  type PGRep (CI StrictText) = PGCitext
+  constant = safeCoerceFromRep . pgCiStrictText
+instance QueryRunnerColumnDefault (CI StrictText) (CI StrictText) where
   queryRunnerColumnDefault = qrcDef
 
-instance ShowConstant (CI L.Text) where
-  type PGRep (CI L.Text) = PGCitext
-  constant = constantCIText
-instance QueryRunnerColumnDefault (CI L.Text) (CI L.Text) where
+instance ShowConstant (CI LazyText) where
+  type PGRep (CI LazyText) = PGCitext
+  constant = safeCoerceFromRep . pgCiLazyText
+instance QueryRunnerColumnDefault (CI LazyText) (CI LazyText) where
   queryRunnerColumnDefault = qrcDef
 
 qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
 qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRunnerColumnDefault
-
-class TString a where
-  constantString :: a -> Column a
-
-instance TString [Char] where
-  constantString = safeCoerceFromRep . pgString
-
-instance TString StrictText where
-  constantString = safeCoerceFromRep . pgStrictText
-
-instance TString LazyText where
-  constantString = safeCoerceFromRep . pgLazyText
-
-class TInt4 a where
-  constantInt4 :: a -> Column a
-
-class TInt8 a where
-  constantInt8 :: a -> Column a
-
-instance TInt4 Int where
-  constantInt4 = safeCoerceFromRep . pgInt4
-
-instance TInt8 Int64 where
-  constantInt8 = safeCoerceFromRep . pgInt8
-
-class TDouble a where
-  constantDouble :: a -> Column a
-
-instance TDouble Double where
-  constantDouble = safeCoerceFromRep . pgDouble
-
-class TBool a where
-  constantBool :: a -> Column a
-
-instance TBool Bool where
-  constantBool = safeCoerceFromRep . pgBool
-
-class TUUID a where
-  constantUUID :: a -> Column a
-
-instance TUUID UUID where
-  constantUUID = safeCoerceFromRep . pgUUID
-
-class TDate a where
-  constantDay :: a -> Column a
-
-instance TDate Day where
-  constantDay = safeCoerceFromRep . pgDay
-
-class TTimestamptz a where
-  constantTimestamptz :: a -> Column a
-
-instance TTimestamptz UTCTime where
-  constantTimestamptz = safeCoerceFromRep . pgUTCTime
-
-class TTimestamp a where
-  constantTimestamp :: a -> Column a
-
-instance TTimestamp LocalTime where
-  constantTimestamp = safeCoerceFromRep . pgLocalTime
-
-class TTime a where
-  constantTime :: a -> Column a
-
-instance TTime TimeOfDay where
-  constantTime = safeCoerceFromRep . pgTimeOfDay
-
-class TCIText a where
-  constantCIText :: a -> Column a
-
-instance TCIText (CI StrictText) where
-  constantCIText = safeCoerceFromRep . pgCiStrictText
-
-instance TCIText (CI LazyText) where
-  constantCIText = safeCoerceFromRep . pgCiLazyText
