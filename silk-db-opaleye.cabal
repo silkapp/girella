@@ -18,6 +18,7 @@ library
     Silk.Opaleye
     Silk.Opaleye.Aggregation
     Silk.Opaleye.Combinators
+    Silk.Opaleye.Compat
     Silk.Opaleye.Config
     Silk.Opaleye.Conv
     Silk.Opaleye.Json
