@@ -13,22 +13,27 @@ module Silk.Opaleye.Aggregation
   , boolAnd
   , stringAgg
   , safeCoerceAgg
+  -- * Renames
+  , groupBy_
   -- * Re-exports
   , Aggregator
   , aggregate
-  , groupBy
   ) where
 
 import Data.Int (Int64)
 import Data.Profunctor (Profunctor, dimap)
 
-import Opaleye.Aggregate (Aggregator, aggregate, groupBy)
+import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column)
 import Opaleye.PGTypes (PGBool, PGText)
-import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, max, min, stringAgg, sum)
+import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, stringAgg,
+                                         sum)
 
 import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant (PGRep, safeCoerceFromRep, safeCoerceToRep)
+
+groupBy_ :: Aggregator (Column a) (Column a)
+groupBy_ = A.groupBy
 
 sum_ :: Aggregator (Column a) (Column a)
 sum_ = safeCoerceAgg A.sum

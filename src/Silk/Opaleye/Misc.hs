@@ -20,11 +20,12 @@ module Silk.Opaleye.Misc
 
 import Data.Int (Int64)
 import Data.Profunctor.Product.Default
-import Data.Text (Text, pack)
-import Data.UUID (UUID, toString)
+import Data.String.Conversions
+import Data.UUID (UUID)
 import Opaleye.Manipulation (Unpackspec)
 import Opaleye.QueryArr
 import Opaleye.Sql (showSqlForPostgres)
+import qualified Data.UUID as UUID (toString)
 
 import qualified Data.List as L (sum)
 
@@ -35,8 +36,8 @@ showSql = showSqlForPostgres
 flatten3 :: ((a, b), c) -> (a, b, c)
 flatten3 ((x, y), z) = (x, y, z)
 
-uuidText :: UUID -> Text
-uuidText = pack . toString
+uuidText :: UUID -> StrictText
+uuidText = cs . UUID.toString
 
 -- | Specialized to use in aggregations, just using 'Data.List.sum' may make the type ambiguous.
 sumInt64 :: [Int64] -> Int64

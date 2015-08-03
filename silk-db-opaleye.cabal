@@ -32,11 +32,12 @@ library
     Silk.Opaleye.TH
     Silk.Opaleye.TH.Column
     Silk.Opaleye.TH.Table
-    Silk.Opaleye.TH.Util
+    Silk.Opaleye.Table
     Silk.Opaleye.To
     Silk.Opaleye.Transaction
   other-modules:
     Silk.Opaleye.Transaction.Q
+    Silk.Opaleye.TH.Util
   build-depends:
       base >= 4.6 && < 4.9
     , aeson-utils >= 0.2 && < 0.4

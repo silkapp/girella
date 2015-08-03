@@ -12,10 +12,12 @@ module Silk.Opaleye
   , QueryArr
   , Column
   , fieldQueryRunnerColumn
-  , matchNullable
   , queryTable
   , required
-  , optional
+  , optionalColumn
+
+  -- * Opaleye.Column re-exports
+  , matchNullable
   , toNullable
 
   , module Silk.Opaleye.Aggregation
@@ -23,13 +25,12 @@ module Silk.Opaleye
   , module Silk.Opaleye.Conv
   , module Silk.Opaleye.Misc
   , module Silk.Opaleye.Operators
+  , module Silk.Opaleye.Order
   , module Silk.Opaleye.Query
   , module Silk.Opaleye.Range
+  , module Silk.Opaleye.ShowConstant
   , module Silk.Opaleye.To
   , module Silk.Opaleye.Transaction
-  , module Silk.Opaleye.Order
-  , Q
-  , ShowConstant (..)
   ) where
 
 import Control.Arrow
@@ -42,7 +43,7 @@ import Database.PostgreSQL.Simple (Connection)
 import Opaleye.Column (matchNullable, toNullable)
 import Opaleye.PGTypes
 import Opaleye.QueryArr (Query, QueryArr)
-import Opaleye.Table (optional, queryTable, required)
+import Opaleye.Table (queryTable, required)
 
 import Silk.Opaleye.Aggregation
 import Silk.Opaleye.Combinators
@@ -56,4 +57,3 @@ import Silk.Opaleye.ShowConstant
 import Silk.Opaleye.TH
 import Silk.Opaleye.To
 import Silk.Opaleye.Transaction
-import Silk.Opaleye.Transaction.Q (Q)

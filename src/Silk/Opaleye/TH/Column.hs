@@ -19,18 +19,18 @@ module Silk.Opaleye.TH.Column
 
 import Control.Applicative ((<$>))
 import Control.Monad ((<=<))
-import Data.ByteString (ByteString)
 import Data.Data (Typeable)
 import Data.Maybe (mapMaybe)
 import Data.Profunctor.Product.Default (Default (def))
-import Data.String.Conversions (cs)
+import Data.String.Conversions (StrictByteString, cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
                                              returnError)
 import Language.Haskell.TH
 import Opaleye.Column (Column, Nullable)
-import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..), fieldQueryRunnerColumn)
+import Opaleye.RunQuery (fieldQueryRunnerColumn)
+import Safe (headNote)
 
-import Silk.Opaleye.Compat (unsafeCoerceColumn)
+import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util (getConNameTy, ty)
 
@@ -44,7 +44,7 @@ mkId = return . either error id <=< f <=< reify
       TyConI (NewtypeD _ctx tyName _tyVars@[] con _names) ->
         case getConNameTy con of
           Left err      -> return $ Left err
-          Right (conName, innerTy) -> Right <$> g tyName conName (head innerTy)
+          Right (conName, innerTy) -> Right <$> g tyName conName (headNote "Silk.Opaleye.TH.Column.mkId innerTy" innerTy)
       TyConI NewtypeD{} -> return $ Left "Type variables aren't allowed"
       _  -> return $ Left "Must be a newtype"
 
@@ -115,7 +115,7 @@ getTyVars n = do
     onlyPlain (PlainTV nv) = Just $ VarT nv
     onlyPlain _            = Nothing
 
-fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe ByteString -> Conversion b
+fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe StrictByteString -> Conversion b
 fromFieldAux fromDb f mdata = case mdata of
   Just dat -> maybe (returnError ConversionFailed f (cs dat)) return . fromDb =<< fromField f mdata
   Nothing  -> returnError UnexpectedNull f ""

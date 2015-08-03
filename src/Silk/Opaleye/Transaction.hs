@@ -13,7 +13,13 @@
 --
 -- A function with a Transaction constraint can be composed with others to form a larger transaction.
 -- A MonadPool constraint indicates a complete transaction and can not be composed with others into a single transaction.
-module Silk.Opaleye.Transaction where
+module Silk.Opaleye.Transaction
+  ( Transaction (..)
+  , MonadPool (..)
+  , runTransaction'
+  , Q
+  , unsafeIOToTransaction
+  ) where
 
 import Control.Applicative
 import Control.Exception

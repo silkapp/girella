@@ -2,12 +2,11 @@
 module Silk.Opaleye.TH.Table
   ( -- * TH End points
     makeTypes
-  , makeTable_
+  , makeTable
   , makeAdaptorAndInstance
-  -- * TH dependencies defined here
-  , optionalColumn
   -- * TH dependencien from this package
   , To
+  , optionalColumn
   -- * Re-exported TH dependencies
   , Table (Table)
   , Column
@@ -19,17 +18,18 @@ module Silk.Opaleye.TH.Table
 
 import Control.Monad ((<=<))
 import Data.Char (isUpper, toLower)
+import Data.Foldable (foldl')
 import Data.Generics.Uniplate.Data (transformBi)
-import Data.List (foldl')
 import Data.Profunctor (dimap)
 import Data.Profunctor.Product (ProductProfunctor, p0, p1, p10, p11, p12, p13, p14, p15, p16, p2,
                                 p3, p4, p5, p6, p7, p8, p9)
 import Data.Profunctor.Product.TH (makeAdaptorAndInstance)
 import Language.Haskell.TH.Syntax
 import Opaleye.Column (Column, Nullable)
-import Opaleye.Table (Table (Table), TableProperties, optional)
+import Opaleye.Table (Table (Table))
 
 import Silk.Opaleye.TH.Util (ambiguateName, simpleName, ty)
+import Silk.Opaleye.Table (optionalColumn)
 import Silk.Opaleye.To (To)
 
 makeTypes :: Q [Dec] -> Q [Dec]
@@ -44,7 +44,7 @@ makeType = \case
       synNameO = ambiguateName origTypeName
       synNameH = (`appendToName` "H") $ ambiguateName origTypeName
       appendToName :: Name -> String -> Name
-      appendToName (Name (OccName occ) ns) s = Name (OccName $ occ ++ s) ns
+      appendToName (Name (OccName occ) ns) s = OccName (occ ++ s) `Name` ns
       tvars :: [Name]
       tvars = map (simpleName . (:[])) $ take (length vtys) ['a'..'z']
       ttys :: [Type]
@@ -81,8 +81,8 @@ makeType = \case
 
   _ -> error "This is not a good looking data type"
 
-makeTable_ :: String -> Name -> Name -> Q [Dec]
-makeTable_ tableName pName = f <=< reify
+makeTable :: String -> Name -> Name -> Q [Dec]
+makeTable tableName pName = f <=< reify
   where
     f :: Info -> Q [Dec]
     f = \case
@@ -119,7 +119,4 @@ makeTable_ tableName pName = f <=< reify
              e :: Exp
              e = foldl' AppE (ConE recordName) . map (const . ConE $ simpleName "Nothing") $ vsts
 
-      _ -> error "makeTable_: I need one record"
-
-optionalColumn :: String -> TableProperties (Maybe (Column a)) (Column a)
-optionalColumn = optional
+      _ -> error "makeTable: I need one record"

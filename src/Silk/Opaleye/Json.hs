@@ -21,7 +21,6 @@ module Silk.Opaleye.Json
 
 import Data.Aeson.Utils
 import Data.String.Conversions
-import Data.Text (Text)
 import Language.Haskell.TH
 
 import Silk.Opaleye.TH
@@ -35,7 +34,7 @@ jsonToText = cs . encode . unJson
 textToJson :: StrictText -> Maybe Json
 textToJson = decodeV . cs
 
-makeColumnInstances ''Json ''Text 'jsonToText 'textToJson
+makeColumnInstances ''Json ''StrictText 'jsonToText 'textToJson
 
 toJson :: ToJSON a => a -> Json
 toJson = Json . toJSON
