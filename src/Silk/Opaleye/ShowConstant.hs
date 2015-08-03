@@ -21,8 +21,6 @@ import Data.Int (Int64)
 import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
-import qualified Data.Text      as S
-import qualified Data.Text.Lazy as L
 
 import Opaleye.Column (Column)
 import Opaleye.PGTypes
@@ -50,13 +48,13 @@ instance QueryRunnerColumnDefault [Char] [Char] where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant StrictText where
-  type PGRep S.Text = PGText
+  type PGRep StrictText = PGText
   constant = safeCoerceFromRep . pgStrictText
 instance QueryRunnerColumnDefault StrictText StrictText where
   queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant LazyText where
-  type PGRep L.Text = PGText
+  type PGRep LazyText = PGText
   constant = safeCoerceFromRep . pgLazyText
 instance QueryRunnerColumnDefault LazyText LazyText where
   queryRunnerColumnDefault = qrcDef
