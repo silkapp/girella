@@ -22,11 +22,9 @@ import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
 
-import Opaleye.Column (Column)
+import Opaleye.Column (Column, unsafeCoerceColumn)
 import Opaleye.PGTypes
-import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
-
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+import Opaleye.RunQuery (QueryRunnerColumn, QueryRunnerColumnDefault (..), queryRunnerColumn)
 
 class ShowConstant a where
   type PGRep a :: *

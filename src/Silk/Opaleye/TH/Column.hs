@@ -27,11 +27,12 @@ import Data.String.Conversions (StrictByteString, cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
                                              returnError)
 import Language.Haskell.TH
-import Opaleye.Column (Column, Nullable)
+import Opaleye.Column (Column, Nullable, unsafeCoerceColumn)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
+import Opaleye.RunQuery (QueryRunnerColumnDefault (..))
 import Safe (headNote)
 
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)
+import Silk.Opaleye.Compat (classP_, equalP_)
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util (getConNameTy, ty)
 

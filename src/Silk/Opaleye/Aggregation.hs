@@ -25,11 +25,11 @@ import Data.Profunctor (Profunctor, dimap)
 
 import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column)
+import Opaleye.Order (PGOrd)
 import Opaleye.PGTypes (PGBool, PGText)
 import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, stringAgg,
                                          sum)
 
-import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant (PGRep, safeCoerceFromRep, safeCoerceToRep)
 
 groupBy_ :: Aggregator (Column a) (Column a)
