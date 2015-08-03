@@ -1,5 +1,6 @@
 {-# LANGUAGE
     FlexibleContexts
+  , NoImplicitPrelude
   , NoMonomorphismRestriction
   , ScopedTypeVariables
   , TypeFamilies
@@ -28,10 +29,9 @@ module Silk.Opaleye.Operators
   , unsafeCast
   ) where
 
-import Prelude hiding (foldr, (.))
+import Prelude.Compat hiding ((.))
 
 import Control.Category ((.))
-import Data.Foldable
 
 import Opaleye.Column (toNullable, unsafeCast)
 import Opaleye.PGTypes (PGBool, PGText, pgBool)

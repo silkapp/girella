@@ -36,3 +36,4 @@ getConNameTy c = do
   nm <- getConName c
   t  <- getConTy c
   return (nm,t)
+

@@ -1,6 +1,7 @@
 {-# LANGUAGE
     Arrows
   , FlexibleContexts
+  , NoImplicitPrelude
   #-}
 module Silk.Opaleye.Combinators
   ( where_
@@ -11,10 +12,9 @@ module Silk.Opaleye.Combinators
   , restrict
   ) where
 
-import Prelude hiding (foldr, id, (.))
+import Prelude.Compat hiding (id, (.))
 
-import Control.Applicative
-import Control.Arrow
+import Control.Arrow (arr)
 import Control.Category (id, (.))
 import Data.Profunctor.Product.Default
 

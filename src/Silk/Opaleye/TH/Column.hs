@@ -1,4 +1,4 @@
-{-# LANGUAGE CPP #-}
+{-# LANGUAGE NoImplicitPrelude #-}
 module Silk.Opaleye.TH.Column
   ( -- * TH end points
     mkId
@@ -17,7 +17,8 @@ module Silk.Opaleye.TH.Column
   , unsafeCoerceColumn
   ) where
 
-import Control.Applicative ((<$>))
+import Prelude.Compat
+
 import Control.Monad ((<=<))
 import Data.Data (Typeable)
 import Data.Maybe (mapMaybe)
@@ -30,7 +31,7 @@ import Opaleye.Column (Column, Nullable)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
 import Safe (headNote)
 
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util (getConNameTy, ty)
 
@@ -67,7 +68,7 @@ makeColumnInstances tyName innerTyName toDb fromDb = makeColumnInstancesInternal
 makeColumnInstancesInternal :: Name -> Type -> Name -> Name -> Q [Dec]
 makeColumnInstancesInternal tyName innerTy toDb fromDb = do
   tvars <- getTyVars tyName
-  let predCond = map (ClassP (mkName "Typeable") . (:[])) tvars
+  let predCond = map (classP_ (mkName "Typeable") . (:[])) tvars
   let outterTy = foldl AppT (ConT tyName) tvars
   return $ map ($ (predCond, outterTy)) [fromFld, showConst, queryRunnerColumn]
   where
@@ -95,7 +96,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb = do
           ]
     queryRunnerColumn (predCond, outterTy)
       = InstanceD
-          (compEqualP (ConT (mkName "PGRep") `AppT` outterTy) tyVar : predCond)
+          (equalP_ (ConT (mkName "PGRep") `AppT` outterTy) tyVar : predCond)
           (ConT (mkName "QueryRunnerColumnDefault") `AppT` outterTy `AppT` outterTy)
           [ FunD
             (mkName "queryRunnerColumnDefault")
@@ -119,10 +120,3 @@ fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe St
 fromFieldAux fromDb f mdata = case mdata of
   Just dat -> maybe (returnError ConversionFailed f (cs dat)) return . fromDb =<< fromField f mdata
   Nothing  -> returnError UnexpectedNull f ""
-
-compEqualP :: Type -> Type -> Pred
-#if MIN_VERSION_template_haskell(2,10,0)
-compEqualP t1 t2 = EqualityT `AppT` t1 `AppT` t2
-#else
-compEqualP = EqualP
-#endif

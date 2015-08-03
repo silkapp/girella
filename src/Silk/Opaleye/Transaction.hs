@@ -2,6 +2,7 @@
 {-# LANGUAGE
     FlexibleContexts
   , FlexibleInstances
+  , NoImplicitPrelude
   , OverloadedStrings
   , ScopedTypeVariables
   , TypeFamilies
@@ -21,8 +22,11 @@ module Silk.Opaleye.Transaction
   , unsafeIOToTransaction
   ) where
 
-import Control.Applicative
-import Control.Exception
+import Prelude.Compat
+
+import Control.Exception (AsyncException, BlockedIndefinitelyOnMVar, BlockedIndefinitelyOnSTM,
+                          Deadlock, Handler (Handler), SomeException (SomeException), catches,
+                          throwIO)
 import Control.Monad.Error.Class (Error)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
 import Control.Monad.Trans.Class (lift)
@@ -32,7 +36,6 @@ import Control.Monad.Trans.Identity (IdentityT)
 import Control.Monad.Trans.Maybe (MaybeT)
 import Control.Monad.Trans.State (StateT)
 import Control.Monad.Trans.Writer (WriterT)
-import Data.Monoid
 import Data.Pool (withResource)
 import qualified Database.PostgreSQL.Simple as PG
 

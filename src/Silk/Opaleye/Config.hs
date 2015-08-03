@@ -25,7 +25,7 @@ data Config a = Config
   { connectionPool    :: Pool Connection
   , maxTries          :: Int
   , beforeTransaction :: IO a
-  , onRetry           :: Exception e => e -> a -> IO ()
+  , onRetry           :: forall e . Exception e => e -> a -> IO ()
   , afterTransaction  :: a -> IO ()
   }
 

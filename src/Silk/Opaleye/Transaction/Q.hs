@@ -1,13 +1,15 @@
 {-# LANGUAGE
     DeriveFunctor
   , GeneralizedNewtypeDeriving
+  , NoImplicitPrelude
   #-}
 module Silk.Opaleye.Transaction.Q
   ( Q (..)
   , unsafeIOToQ
   ) where
 
-import Control.Applicative
+import Prelude.Compat
+
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader (MonadReader, ReaderT)
 import Database.PostgreSQL.Simple (Connection)
