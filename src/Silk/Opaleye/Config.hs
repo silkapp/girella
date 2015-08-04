@@ -1,6 +1,10 @@
 {-# LANGUAGE Rank2Types #-}
 module Silk.Opaleye.Config
   ( Config
+  , Config_
+  , Connection
+  , ConnectInfo (..)
+  , Pool
   , connectionPool
   , maxTries
   , onRetry

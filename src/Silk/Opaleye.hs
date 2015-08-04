@@ -1,9 +1,7 @@
 module Silk.Opaleye
   ( module Control.Arrow
-  , Connection
   , Contravariant (..)
   , Int64
-  , Pool
   , lmap
 
   , module Opaleye.PGTypes
@@ -22,6 +20,7 @@ module Silk.Opaleye
 
   , module Silk.Opaleye.Aggregation
   , module Silk.Opaleye.Combinators
+  , module Silk.Opaleye.Config
   , module Silk.Opaleye.Conv
   , module Silk.Opaleye.Misc
   , module Silk.Opaleye.Operators
@@ -36,9 +35,7 @@ module Silk.Opaleye
 import Control.Arrow
 import Data.Functor.Contravariant (Contravariant (..))
 import Data.Int (Int64)
-import Data.Pool (Pool)
 import Data.Profunctor (lmap)
-import Database.PostgreSQL.Simple (Connection)
 
 import Opaleye.Column (matchNullable, toNullable)
 import Opaleye.PGTypes
@@ -47,6 +44,7 @@ import Opaleye.Table (queryTable, required)
 
 import Silk.Opaleye.Aggregation
 import Silk.Opaleye.Combinators
+import Silk.Opaleye.Config
 import Silk.Opaleye.Conv
 import Silk.Opaleye.Misc
 import Silk.Opaleye.Operators

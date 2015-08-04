@@ -3,6 +3,7 @@
     FlexibleContexts
   , FlexibleInstances
   , NoImplicitPrelude
+  , OverlappingInstances
   , OverloadedStrings
   , ScopedTypeVariables
   , TypeFamilies
@@ -69,8 +70,8 @@ instance Transaction m => Transaction (IdentityT m) where
 unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
-runTransaction' :: forall c a . Config c -> Q a -> IO a
-runTransaction' cfg q = do
+runTransaction' :: forall c a . Q a -> Config c -> IO a
+runTransaction' q cfg = do
   c <- beforeTransaction cfg
   res <- withRetry c 1
     $ withResource (connectionPool cfg)
@@ -97,11 +98,11 @@ runTransaction' cfg q = do
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
-instance MonadPool (ReaderT (Config a) IO) where
-  runTransaction t = ask >>= lift . (`runTransaction'` t)
-
 instance MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
+
+instance MonadPool (ReaderT (Config a) IO) where
+  runTransaction t = ask >>= lift . runTransaction' t
 
 instance (MonadPool m, Error e) => MonadPool (ErrorT e m) where
   runTransaction = lift . runTransaction
