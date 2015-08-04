@@ -1,12 +1,8 @@
 {-# OPTIONS -fno-warn-deprecations #-}
 {-# LANGUAGE
-    FlexibleContexts
-  , FlexibleInstances
+    FlexibleInstances
   , NoImplicitPrelude
-  , OverlappingInstances
-  , OverloadedStrings
   , ScopedTypeVariables
-  , TypeFamilies
   #-}
 -- | Composable transactions inside monad stacks.
 --

@@ -1,8 +1,6 @@
 {-# LANGUAGE
     FlexibleContexts
   , NoImplicitPrelude
-  , NoMonomorphismRestriction
-  , ScopedTypeVariables
   , TypeFamilies
   #-}
 module Silk.Opaleye.Operators

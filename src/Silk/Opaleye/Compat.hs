@@ -1,8 +1,4 @@
-{-# LANGUAGE
-    CPP
-  , FlexibleInstances
-  , TypeSynonymInstances
-  #-}
+{-# LANGUAGE CPP #-}
 module Silk.Opaleye.Compat
   ( equalP_
   , classP_

@@ -1,6 +1,5 @@
 {-# LANGUAGE
     FlexibleContexts
-  , NoMonomorphismRestriction
   , TypeFamilies
   #-}
 module Silk.Opaleye.Aggregation

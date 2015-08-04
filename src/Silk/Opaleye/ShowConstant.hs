@@ -1,13 +1,9 @@
 {-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
-    CPP
-  , FlexibleContexts
-  , FlexibleInstances
+    FlexibleInstances
   , MultiParamTypeClasses
-  , NoMonomorphismRestriction
   , ScopedTypeVariables
   , TypeFamilies
-  , UndecidableInstances
   #-}
 module Silk.Opaleye.ShowConstant
   ( ShowConstant (..)

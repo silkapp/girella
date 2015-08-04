@@ -1,12 +1,8 @@
 {-# LANGUAGE
     DeriveDataTypeable
-  , DeriveGeneric
-  , FlexibleInstances
   , GeneralizedNewtypeDeriving
   , LambdaCase
   , MultiParamTypeClasses
-  , NoMonomorphismRestriction
-  , OverloadedStrings
   , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances

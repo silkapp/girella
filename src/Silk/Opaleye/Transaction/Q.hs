@@ -1,8 +1,4 @@
-{-# LANGUAGE
-    DeriveFunctor
-  , GeneralizedNewtypeDeriving
-  , NoImplicitPrelude
-  #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Silk.Opaleye.Transaction.Q
   ( Q (..)
   , unsafeIOToQ
