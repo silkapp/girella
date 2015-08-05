@@ -10,7 +10,7 @@ module Silk.Opaleye.Aggregation
   , min_
   , boolOr
   , boolAnd
-  , stringAgg
+--  , stringAgg
   , safeCoerceAgg
   -- * Renames
   , groupBy_
@@ -25,8 +25,7 @@ import Data.Profunctor (Profunctor, dimap)
 import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column)
 import Opaleye.PGTypes (PGBool, PGText)
-import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, stringAgg,
-                                         sum)
+import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, sum)
 
 import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant (PGRep, safeCoerceFromRep, safeCoerceToRep)
@@ -55,8 +54,8 @@ boolOr = safeCoerceAgg A.boolOr
 boolAnd :: PGRep a ~ PGBool => Aggregator (Column a) (Column a)
 boolAnd = safeCoerceAgg A.boolAnd
 
-stringAgg :: PGRep a ~ PGText => Column a -> Aggregator (Column a) (Column a)
-stringAgg = safeCoerceAgg . A.stringAgg . safeCoerceToRep
+--stringAgg :: PGRep a ~ PGText => Column a -> Aggregator (Column a) (Column a)
+--stringAgg = safeCoerceAgg . A.stringAgg . safeCoerceToRep
 
 -- TODO: Missing arrayAgg
 
