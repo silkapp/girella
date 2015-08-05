@@ -8,9 +8,9 @@ module Silk.Opaleye.Order
 
 import Opaleye.Column (Column)
 import Opaleye.Order (Order, orderBy)
-import Opaleye.Order (PGOrd)
 import qualified Opaleye.Order as O
 
+import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant
 
 asc :: PGOrd (PGRep b) => (a -> Column b) -> Order a

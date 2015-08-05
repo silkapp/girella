@@ -30,12 +30,13 @@ module Silk.Opaleye.Operators
 import Prelude.Compat hiding ((.))
 
 import Control.Category ((.))
+
 import Opaleye.Column (toNullable, unsafeCast)
-import Opaleye.Order (PGOrd)
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
 import qualified Opaleye.Column    as C
 import qualified Opaleye.Operators as O
 
+import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant
 import Silk.Opaleye.TH
 
