@@ -50,23 +50,22 @@ mkId = return . either error id <=< f <=< reify
       _  -> return $ Left "Must be a newtype"
 
     g :: Name -> Name -> Type -> Q [Dec]
-    g tyName _conName innerTy = do
-      let unsafeName      = mkUnsafeName defName
-          unsafeNamePrime = mkUnsafeName primeName
+    g tyName conName innerTy = do
+      let unsafeName      = mkUnsafeName $ nameBase tyName
+          unsafeNamePrime = mkUnsafeName $ primeName $ nameBase tyName
           x =    map ($ unsafeName     ) [mkUnsafeIdSig , mkUnsafeId]
               ++ map ($ unsafeNamePrime) [mkUnsafeIdSig', mkUnsafeId']
       y <- makeColumnInstancesInternal tyName innerTy (mkName "unId") unsafeNamePrime
       return $ x ++ y
       where
-        defName = "Id"
-        primeName = defName ++ "'"
+        primeName nm = nm ++ "'"
         mkUnsafeName nm = mkName $ "unsafe" ++ nm
 
         mkUnsafeIdSig, mkUnsafeId, mkUnsafeIdSig', mkUnsafeId' :: Name -> Dec
-        mkUnsafeIdSig  nm = SigD     nm $ ArrowT `AppT` innerTy `AppT` ty "Id"
-        mkUnsafeId     nm = plainFun nm $ ConE (mkName "Id")
-        mkUnsafeIdSig' nm = SigD     nm $ ArrowT `AppT` innerTy `AppT` (ty "Maybe" `AppT` ty "Id")
-        mkUnsafeId'    nm = plainFun nm $ VarE (mkName ".") `AppE` ConE (mkName "Just") `AppE` ConE (mkName "Id")
+        mkUnsafeIdSig  nm = SigD     nm $ ArrowT `AppT` innerTy `AppT` ConT tyName
+        mkUnsafeId     nm = plainFun nm $ ConE conName
+        mkUnsafeIdSig' nm = SigD     nm $ ArrowT `AppT` innerTy `AppT` (ty "Maybe" `AppT` ConT tyName)
+        mkUnsafeId'    nm = plainFun nm $ VarE (mkName ".") `AppE` ConE (mkName "Just") `AppE` ConE conName
 
         plainFun n e = FunD n [Clause [] (NormalB e) []]
 
