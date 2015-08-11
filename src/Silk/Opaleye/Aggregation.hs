@@ -24,7 +24,7 @@ import Data.Profunctor (Profunctor, dimap)
 
 import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column)
-import Opaleye.PGTypes (PGBool, PGText)
+import Opaleye.PGTypes (PGBool)
 import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, sum)
 
 import Silk.Opaleye.Compat (PGOrd)
