@@ -29,33 +29,37 @@ import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), 
 import Language.Haskell.TH
 import Opaleye.Column (Column, Nullable)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
-import Safe (headNote)
 
 import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
-import Silk.Opaleye.TH.Util (getConNameTy, ty)
+import Silk.Opaleye.TH.Util (ty)
 
--- TODO This assumes the destructor is named unId, can be changed to a pattern match.
--- TODO It's probably too lenient with input as well, only newtypes or constructors with one field are allowed.
+
 mkId :: Name -> Q [Dec]
 mkId = return . either error id <=< f <=< reify
   where
     f :: Info -> Q (Either String [Dec])
     f i = case i of
       TyConI (NewtypeD _ctx tyName _tyVars@[] con _names) ->
-        case getConNameTy con of
-          Left err      -> return $ Left err
-          Right (conName, innerTy) -> Right <$> g tyName conName (headNote "Silk.Opaleye.TH.Column.mkId innerTy" innerTy)
+        case con of
+          NormalC conName [(_ , innerTy)] ->
+            Right <$> g tyName conName innerTy (mkName $ "un" ++ nameBase tyName)
+          -- ^ This case guarantees compatibility with the previous splice
+          -- if the newtype's destructor was independently defined or was
+          -- not defined not use a record field destructor
+          RecC conName [(desName , _ , innerTy)] ->
+            Right <$> g tyName conName innerTy desName
+          _ -> return $ Left "Must be a newtype without type parameters and a single destructor record field"
       TyConI NewtypeD{} -> return $ Left "Type variables aren't allowed"
-      _  -> return $ Left "Must be a newtype"
+      _                 -> return $ Left "Must be a newtype"
 
-    g :: Name -> Name -> Type -> Q [Dec]
-    g tyName conName innerTy = do
+    g :: Name -> Name -> Type -> Name -> Q [Dec]
+    g tyName conName innerTy desName = do
       let unsafeName      = mkUnsafeName $ nameBase tyName
           unsafeNamePrime = mkUnsafeName $ primeName $ nameBase tyName
           x =    map ($ unsafeName     ) [mkUnsafeIdSig , mkUnsafeId]
               ++ map ($ unsafeNamePrime) [mkUnsafeIdSig', mkUnsafeId']
-      y <- makeColumnInstancesInternal tyName innerTy (mkName "unId") unsafeNamePrime
+      y <- makeColumnInstancesInternal tyName innerTy desName unsafeNamePrime
       return $ x ++ y
       where
         primeName nm = nm ++ "'"
