@@ -53,7 +53,7 @@ makeAdaptorAndInstance "pPerson" ''PersonP
 
 instance Conv PersonH
 
-makeTable_ "people" 'pPerson ''PersonP
+makeTable "people" 'pPerson ''PersonP
 
 queryAll :: Query (To Column Person)
 queryAll = queryTable table
