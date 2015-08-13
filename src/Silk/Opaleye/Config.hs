@@ -14,7 +14,9 @@ module Silk.Opaleye.Config
   , makeConfig
   , defaultConfig
   , defaultBeforeTransaction
+  , defaultOnRetry
   , defaultAfterTransaction
+  , setCallbacks
 
   , defaultPool
   ) where
@@ -50,11 +52,18 @@ defaultConfig = fmap makeConfig . defaultPool
 defaultPool :: ConnectInfo -> IO (Pool Connection)
 defaultPool connectInfo = createPool (PG.connect connectInfo) PG.close 10 5 10
 
-defaultOnRetry :: Exception e => e -> a -> IO ()
-defaultOnRetry e _ = hPutStrLn stderr $ "Warning: Exception during database action, retrying: " ++ show e
-
 defaultBeforeTransaction :: IO ()
 defaultBeforeTransaction = return ()
 
+defaultOnRetry :: Exception e => e -> a -> IO ()
+defaultOnRetry e _ = hPutStrLn stderr $ "Warning: Exception during database action, retrying: " ++ show e
+
 defaultAfterTransaction :: a -> IO ()
 defaultAfterTransaction = const (return ())
+
+setCallbacks :: IO a -> (forall e. Exception e => e -> a -> IO ()) -> (a -> IO ()) -> Config b -> Config a
+setCallbacks before retry after c = c
+  { beforeTransaction = before
+  , onRetry           = retry
+  , afterTransaction  = after
+  }
