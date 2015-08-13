@@ -3,6 +3,7 @@
   , FlexibleInstances
   , LambdaCase
   , MultiParamTypeClasses
+  , NoImplicitPrelude
   , NoMonomorphismRestriction
   , TemplateHaskell
   , TypeFamilies
@@ -10,7 +11,7 @@
   #-}
 module Example where
 
-import Prelude hiding (id, (.))
+import Prelude.Compat hiding (id, (.))
 
 import Control.Arrow
 import Control.Category
@@ -81,6 +82,19 @@ insert n a mg = runInsert table psn
       , age    = Just $ constant a
       , gender = Just $ maybeToNullable mg
       }
+
+update :: Transaction m => String -> Int -> Maybe Gender -> m Bool
+update n a mg = (> 0) <$> runUpdate table upd condition
+  where
+    upd :: To Column Person -> To Maybe (To Column Person)
+    upd p = p
+      { id_    = Just $ id_ p
+      , name   = Just $ name p
+      , age    = Just $ constant a
+      , gender = Just $ maybeToNullable mg
+      }
+    condition :: To Column Person -> Column Bool
+    condition p = name p .== constant n
 
 -- Type sig can be generalized to Conv as above.
 insertAndSelectAll :: Transaction m => String -> Int -> Maybe Gender -> m [PersonH]
