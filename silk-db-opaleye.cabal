@@ -10,6 +10,22 @@ category:            Silk
 build-type:          Simple
 cabal-version:       >=1.10
 
+executable example
+  default-language:  Haskell2010
+  ghc-options:       -Wall
+  hs-source-dirs:    example
+  other-modules:     Example
+  main-is:           Main.hs
+  build-depends:
+      base >= 4.6 && < 4.9
+    , base-compat >= 0.8.2 && < 0.9
+    , mtl >= 2.0 && < 2.3
+    , mtl-compat >= 0.1 && < 0.3
+    , silk-db-opaleye
+    , transformers >= 0.3 && < 0.5
+    , transformers-compat >= 0.3 && < 0.5
+    , uuid == 1.3.*
+
 library
   default-language:  Haskell2010
   ghc-options:       -Wall

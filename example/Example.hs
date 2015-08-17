@@ -43,7 +43,7 @@ makeColumnInstances ''Gender ''String 'genderToString 'stringToGender
 
 makeTypes [d|
     data Person = Person
-      { id_    :: Id
+      { id'    :: Id
       , name   :: String
       , age    :: Int
       , gender :: Nullable Gender
@@ -60,7 +60,7 @@ queryAll :: Query (To Column Person)
 queryAll = queryTable table
 
 byId :: UUID -> Query (To Column Person)
-byId i = where_ (\u -> id_ u .== constant (unsafeId i)) . queryAll
+byId i = where_ (\u -> id' u .== constant (unsafeId i)) . queryAll
 
 nameOrder :: Order (To Column Person)
 nameOrder = asc (lower . arr name)
@@ -72,12 +72,13 @@ allByName = orderBy nameOrder queryAll
 runById :: Transaction m => UUID -> m (Maybe PersonH)
 runById = runQueryFirst . byId
 
-insert :: Transaction m => String -> Int -> Maybe Gender -> m ()
-insert n a mg = runInsert table psn
+insert :: Transaction m => UUID -> String -> Int -> Maybe Gender -> m ()
+insert i n a mg =
+  runInsert table psn
   where
     psn :: To Maybe (To Column Person)
     psn = Person
-      { id_    = Nothing
+      { id'    = Just $ constant (unsafeId i)
       , name   = Just $ constant n
       , age    = Just $ constant a
       , gender = Just $ maybeToNullable mg
@@ -88,7 +89,7 @@ update n a mg = (> 0) <$> runUpdate table upd condition
   where
     upd :: To Column Person -> To Maybe (To Column Person)
     upd p = p
-      { id_    = Just $ id_ p
+      { id'    = Just $ id' p
       , name   = Just $ name p
       , age    = Just $ constant a
       , gender = Just $ maybeToNullable mg
@@ -97,11 +98,11 @@ update n a mg = (> 0) <$> runUpdate table upd condition
     condition p = name p .== constant n
 
 -- Type sig can be generalized to Conv as above.
-insertAndSelectAll :: Transaction m => String -> Int -> Maybe Gender -> m [PersonH]
-insertAndSelectAll n a mg = do
-  insert n a mg
+insertAndSelectAll :: Transaction m => UUID -> String -> Int -> Maybe Gender -> m [PersonH]
+insertAndSelectAll i n a mg = do
+  insert i n a mg
   runQuery queryAll
 
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
-runInsertAndSelectAll :: MonadPool m => String -> Int -> Maybe Gender -> m [PersonH]
-runInsertAndSelectAll n a mg = runTransaction $ insertAndSelectAll n a mg
+runInsertAndSelectAll :: MonadPool m => UUID -> String -> Int -> Maybe Gender -> m [PersonH]
+runInsertAndSelectAll i n a mg = runTransaction $ insertAndSelectAll i n a mg
