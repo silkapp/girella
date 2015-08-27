@@ -40,15 +40,17 @@ runInsert tab q = liftQ $ do
 runInsertReturning
   :: ( Default QueryRunner returned haskells
      , Default Unpackspec returned returned
+     , OpaRep domain ~ haskells
+     , Conv domain
      , Transaction m
      )
   => Table columnsW columnsR
   -> columnsW
   -> (columnsR -> returned)
-  -> m [haskells]
+  -> m [domain]
 runInsertReturning tab ins ret = liftQ $ do
   conn <- ask
-  unsafeIOToTransaction $ M.runInsertReturning conn tab ins ret
+  fmap conv $ unsafeIOToTransaction $ M.runInsertReturning conn tab ins ret
 
 -- | runUpdate inside a Transaction
 runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column Bool) -> m Int64
