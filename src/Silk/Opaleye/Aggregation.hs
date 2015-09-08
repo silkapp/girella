@@ -54,6 +54,7 @@ boolOr = safeCoerceAgg A.boolOr
 boolAnd :: PGRep a ~ PGBool => Aggregator (Column a) (Column a)
 boolAnd = safeCoerceAgg A.boolAnd
 
+-- TODO Needs opaleye 0.4
 --stringAgg :: PGRep a ~ PGText => Column a -> Aggregator (Column a) (Column a)
 --stringAgg = safeCoerceAgg . A.stringAgg . safeCoerceToRep
 

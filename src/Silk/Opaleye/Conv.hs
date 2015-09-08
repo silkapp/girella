@@ -12,11 +12,18 @@ import Data.String.Conversions
 import Data.Time
 import Data.UUID
 
--- | Convert an opaleye result to a separate type.
+-- | Convert an opaleye result to a separate type. Conv is used by the
+-- query functions.
 --
--- Also has a default implementation for the identity conversion so
--- both domain and database functions can use query functions in
--- the same way.
+-- Opaleye results are Haskell values, usually a tuple of table types.
+--
+-- Using the identity conversion we get just this value, good if you
+-- have short lived objects or are writing very DB centric code.
+--
+-- Otherwise you may want to write a conversion to a "domain" type.
+--
+-- It's possible to write functions that can map to several haskell
+-- types, compare Girella's query functions to opaleye's.
 class Conv d where
   type OpaRep d :: *
   type OpaRep d = d

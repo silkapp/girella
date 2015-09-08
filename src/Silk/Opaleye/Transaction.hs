@@ -110,7 +110,8 @@ unsafeIOToTransaction = liftQ . unsafeIOToQ
 -- | The default way to run a transaction or implement MonadPool.
 -- With a typical ReaderT over some data type containing a 'Config c'
 -- you can implement 'MonadPool''s 'runTransaction' as
--- 'defaultRunTransaction $ asks myConfig'.
+--
+-- > defaultRunTransaction (asks myConfig)
 --
 -- It catches "recoverable" exceptions and retries according to the 'Config'.
 defaultRunTransaction :: forall m c a . MonadIO m => m (Config c) -> Q a -> m a

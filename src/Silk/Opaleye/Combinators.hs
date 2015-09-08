@@ -48,6 +48,9 @@ innerJoinOn q column = proc a -> do
 
 infixr 4 `innerJoinOn`
 
+-- | A normal SQL left join.
+--
+-- Usually it's nicest to do left joins first out of joins in a query.
 leftJoin ::
   ( Default Unpackspec columnsA columnsA
   , Default Unpackspec columnsB columnsB
@@ -58,5 +61,6 @@ leftJoin ::
   -> Query (columnsA, nullableColumnsB)
 leftJoin a b f = J.leftJoin a b (safeCoerceToRep . f)
 
+-- | Opaleye's 'restrict' over a 'Bool'.
 restrict :: QueryArr (Column Bool) ()
 restrict = O.restrict . arr safeCoerceToRep

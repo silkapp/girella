@@ -24,16 +24,36 @@ import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
 
 import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 
+-- | A type that can be serialized and used in the database. 'PGRep'
+-- gives the opaleye type and 'constant' converts a value to a
+-- 'Column'.
+--
+-- This type can not be nullable since that leads to unintuitive
+--behavior when using operands that have special cases for null.
+--
+-- Note that 'constant' gives us 'Column a' and not 'Column (PGRep
+-- a)'. The reason is that we don't want two types (e.g. two primary
+-- keys) to be comparable just because the have the same underlying
+-- type.
+--
+-- Girella's API doesn't use the internal 'PGTypes', everything is
+-- mapped to Haskell types.
+--
+-- The instances defined in this module correspond directly to the
+-- types Opaleye supports.
 class ShowConstant a where
   type PGRep a :: *
   constant :: a -> Column a
 
+-- | It's always safe to coerce to the underlying representation.
 safeCoerceToRep :: PGRep a ~ b => Column a -> Column b
 safeCoerceToRep = unsafeCoerceColumn
 
+-- | It's always safe to coerce from  the underlying representation.
 safeCoerceFromRep :: PGRep a ~ b => Column b -> Column a
 safeCoerceFromRep = unsafeCoerceColumn
 
+-- Perform a db operation on the underlying type.
 safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
 safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
@@ -108,6 +128,9 @@ instance ShowConstant TimeOfDay where
   constant = safeCoerceFromRep . pgTimeOfDay
 instance QueryRunnerColumnDefault TimeOfDay TimeOfDay where
   queryRunnerColumnDefault = qrcDef
+
+-- postgresql-simple only defines 'CI' instances for strict & lazy
+-- 'Text' so we can't do more either.
 
 instance ShowConstant (CI StrictText) where
   type PGRep (CI StrictText) = PGCitext
