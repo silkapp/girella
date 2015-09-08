@@ -46,6 +46,8 @@ innerJoinOn q column = proc a -> do
   O.restrict -< column q' O..== a
   id -< q'
 
+infixr 4 `innerJoinOn`
+
 leftJoin ::
   ( Default Unpackspec columnsA columnsA
   , Default Unpackspec columnsB columnsB
