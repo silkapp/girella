@@ -41,6 +41,17 @@ import qualified Database.PostgreSQL.Simple as PG
 import Silk.Opaleye.Config
 import Silk.Opaleye.Transaction.Q (Q (..), unsafeIOToQ)
 
+-- | Composable transactions, this is the layer where queries are
+-- combined. Typically all sequences of queries should have a
+-- Transaction constraint rather than MonadPool (see below) since the
+-- end user can then decide whether to combine different Transactions
+-- into one. There is no IO (but see 'unsafeIOToTransaction') since
+-- database transactions can't be combined with arbitrary other
+-- effects.
+--
+-- You may se the type 'Q' instead of a 'Transaction' constraint
+-- sometimes, they have the same relationship as 'IO' and 'MonadIO'
+-- do.
 class (Functor m, Applicative m, Monad m) => Transaction m where
   liftQ :: Q a -> m a
 
@@ -68,6 +79,11 @@ instance Transaction m => Transaction (IdentityT m) where
 instance Transaction m => Transaction (MaybeT m) where
   liftQ = lift . liftQ
 
+-- High level composition of database transactions with configuration
+-- to run them. You can call 'runTransaction' to execute
+-- Transactions. Several Transaction's can be combined into one, or
+-- other IO-related operations can be interleaved between them. If You
+-- only combine queries, just use Transaction instead of MonadPool.
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
@@ -86,9 +102,17 @@ instance MonadPool m => MonadPool (MaybeT m) where
 instance MonadPool (ReaderT (Config a) IO) where
   runTransaction = defaultRunTransaction ask
 
+-- | Run an arbitrary IO computation inside a Transaction. I hope you
+-- know what you are doing.
 unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
+-- | The default way to run a transaction or implement MonadPool.
+-- With a typical ReaderT over some data type containing a 'Config c'
+-- you can implement 'MonadPool''s 'runTransaction' as
+-- 'defaultRunTransaction $ asks myConfig'.
+--
+-- It catches "recoverable" exceptions and retries according to the 'Config'.
 defaultRunTransaction :: forall m c a . MonadIO m => m (Config c) -> Q a -> m a
 defaultRunTransaction mc t = liftIO . run t =<< mc
   where
