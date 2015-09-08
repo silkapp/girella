@@ -3,6 +3,7 @@ module Silk.Opaleye.TH.Column
   ( -- * TH end points
     mkId
   , makeColumnInstances
+  , makeColumnInstancesWithoutConv
     -- * TH dependencies defined here
   , fromFieldAux
     -- * Re-exported TH dependencies
@@ -15,6 +16,7 @@ module Silk.Opaleye.TH.Column
   , Column
   , fieldQueryRunnerColumn
   , unsafeCoerceColumn
+  , Conv
   ) where
 
 import Prelude.Compat
@@ -31,6 +33,7 @@ import Opaleye.Column (Column, Nullable)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
 
 import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)
+import Silk.Opaleye.Conv (Conv)
 import Silk.Opaleye.ShowConstant (ShowConstant (..))
 import Silk.Opaleye.TH.Util (ty)
 
@@ -71,7 +74,7 @@ mkId = return . either error id <=< f <=< reify
           unsafeNamePrime = mkUnsafeName $ primeName $ nameBase tyName
           x =    map ($ unsafeName     ) [mkUnsafeIdSig , mkUnsafeId]
               ++ map ($ unsafeNamePrime) [mkUnsafeIdSig', mkUnsafeId']
-      y <- makeColumnInstancesInternal tyName innerTy desName unsafeNamePrime
+      y <- makeColumnInstancesInternal tyName innerTy desName unsafeNamePrime True
       return $ x ++ y
       where
         primeName nm = nm ++ "'"
@@ -86,14 +89,17 @@ mkId = return . either error id <=< f <=< reify
         plainFun n e = FunD n [Clause [] (NormalB e) []]
 
 makeColumnInstances :: Name -> Name -> Name -> Name -> Q [Dec]
-makeColumnInstances tyName innerTyName toDb fromDb = makeColumnInstancesInternal tyName (ConT innerTyName) toDb fromDb
+makeColumnInstances tyName innerTyName toDb fromDb = makeColumnInstancesInternal tyName (ConT innerTyName) toDb fromDb True
 
-makeColumnInstancesInternal :: Name -> Type -> Name -> Name -> Q [Dec]
-makeColumnInstancesInternal tyName innerTy toDb fromDb = do
+makeColumnInstancesWithoutConv :: Name -> Name -> Name -> Name -> Q [Dec]
+makeColumnInstancesWithoutConv tyName innerTyName toDb fromDb = makeColumnInstancesInternal tyName (ConT innerTyName) toDb fromDb False
+
+makeColumnInstancesInternal :: Name -> Type -> Name -> Name -> Bool -> Q [Dec]
+makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   tvars <- getTyVars tyName
   let predCond = map (classP_ (mkName "Typeable") . (:[])) tvars
   let outterTy = foldl AppT (ConT tyName) tvars
-  return $ map ($ (predCond, outterTy)) [fromFld, showConst, queryRunnerColumn]
+  return $ map ($ (predCond, outterTy)) $ [fromFld, showConst, queryRunnerColumn] ++ if convInstance then [conv] else []
   where
     fromFld (predCond, outterTy)
       = InstanceD
@@ -119,13 +125,13 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb = do
           ]
     queryRunnerColumn (predCond, outterTy)
       = InstanceD
-          (equalP_ (ConT (mkName "PGRep") `AppT` outterTy) tyVar : predCond)
+          (equalP_ (ConT (mkName "PGRep") `AppT` outterTy) (VarT $ mkName "a") : predCond)
           (ConT (mkName "QueryRunnerColumnDefault") `AppT` outterTy `AppT` outterTy)
           [ FunD
             (mkName "queryRunnerColumnDefault")
             [ Clause [] (NormalB $ VarE $ mkName "fieldQueryRunnerColumn") [] ]
           ]
-      where tyVar = VarT $ mkName "a"
+    conv (_, outerTy) = InstanceD [] (ConT (mkName "Conv") `AppT` outerTy) []
 
 getTyVars :: Name -> Q [Type]
 getTyVars n = do
