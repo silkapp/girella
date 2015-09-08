@@ -16,8 +16,8 @@
 module Silk.Opaleye.Transaction
   ( Transaction (..)
   , MonadPool (..)
-  , runTransaction'
   , Q
+  , defaultRunTransaction
   , unsafeIOToTransaction
   ) where
 
@@ -28,7 +28,7 @@ import Control.Exception (AsyncException, BlockedIndefinitelyOnMVar, BlockedInde
                           throwIO)
 import Control.Monad.Error.Class (Error)
 import Control.Monad.Reader (ReaderT, ask, runReaderT)
-import Control.Monad.Trans.Class (lift)
+import Control.Monad.Trans (MonadIO (..), lift)
 import Control.Monad.Trans.Error (ErrorT)
 import Control.Monad.Trans.Except (ExceptT)
 import Control.Monad.Trans.Identity (IdentityT)
@@ -68,42 +68,11 @@ instance Transaction m => Transaction (IdentityT m) where
 instance Transaction m => Transaction (MaybeT m) where
   liftQ = lift . liftQ
 
-unsafeIOToTransaction :: Transaction m => IO a -> m a
-unsafeIOToTransaction = liftQ . unsafeIOToQ
-
-runTransaction' :: forall c a . Q a -> Config c -> IO a
-runTransaction' q cfg = do
-  c <- beforeTransaction cfg
-  res <- withRetry c 1
-    $ withResource (connectionPool cfg)
-    $ \conn -> PG.withTransaction conn . flip runReaderT conn . unQ $ q
-  afterTransaction cfg c
-  return res
-  where
-    withRetry :: c -> Int -> IO a -> IO a
-    withRetry c n act = act `catchRecoverableExceptions` handler c n act
-    handler :: c -> Int -> IO a -> SomeException -> IO a
-    handler c n act (SomeException e) =
-      if n < maxTries cfg
-        then onRetry cfg e c >> withRetry c (n + 1) act
-        else throwIO e
-    catchRecoverableExceptions :: IO a -> (SomeException -> IO a) -> IO a
-    catchRecoverableExceptions action h = action `catches`
-      [ Handler $ \(e :: AsyncException)            -> throwIO e
-      , Handler $ \(e :: BlockedIndefinitelyOnSTM)  -> throwIO e
-      , Handler $ \(e :: BlockedIndefinitelyOnMVar) -> throwIO e
-      , Handler $ \(e :: Deadlock)                  -> throwIO e
-      , Handler $ \(e :: SomeException)             -> h e
-      ]
-
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
 instance MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
-
-instance MonadPool (ReaderT (Config a) IO) where
-  runTransaction t = ask >>= lift . runTransaction' t
 
 instance (MonadPool m, Error e) => MonadPool (ErrorT e m) where
   runTransaction = lift . runTransaction
@@ -113,3 +82,37 @@ instance MonadPool m => MonadPool (ExceptT e m) where
 
 instance MonadPool m => MonadPool (MaybeT m) where
   runTransaction = lift . runTransaction
+
+instance MonadPool (ReaderT (Config a) IO) where
+  runTransaction = defaultRunTransaction ask
+
+unsafeIOToTransaction :: Transaction m => IO a -> m a
+unsafeIOToTransaction = liftQ . unsafeIOToQ
+
+defaultRunTransaction :: forall m c a . MonadIO m => m (Config c) -> Q a -> m a
+defaultRunTransaction mc t = liftIO . run t =<< mc
+  where
+    run :: Q a -> Config c -> IO a
+    run q cfg = do
+      c <- beforeTransaction cfg
+      res <- withRetry c 1
+        $ withResource (connectionPool cfg)
+        $ \conn -> PG.withTransaction conn . flip runReaderT conn . unQ $ q
+      afterTransaction cfg c
+      return res
+      where
+        withRetry :: c -> Int -> IO a -> IO a
+        withRetry c n act = act `catchRecoverableExceptions` handler c n act
+        handler :: c -> Int -> IO a -> SomeException -> IO a
+        handler c n act (SomeException e) =
+          if n < maxTries cfg
+            then onRetry cfg e c >> withRetry c (n + 1) act
+            else throwIO e
+        catchRecoverableExceptions :: IO a -> (SomeException -> IO a) -> IO a
+        catchRecoverableExceptions action h = action `catches`
+          [ Handler $ \(e :: AsyncException)            -> throwIO e
+          , Handler $ \(e :: BlockedIndefinitelyOnSTM)  -> throwIO e
+          , Handler $ \(e :: BlockedIndefinitelyOnMVar) -> throwIO e
+          , Handler $ \(e :: Deadlock)                  -> throwIO e
+          , Handler $ \(e :: SomeException)             -> h e
+          ]

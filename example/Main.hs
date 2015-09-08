@@ -47,4 +47,4 @@ newtype MyTransStack a = MyTransStack { unTransStack :: ReaderT Config_ IO a }
     )
 
 instance MonadPool MyTransStack where
-  runTransaction t = liftIO . runTransaction' t =<< ask
+  runTransaction = defaultRunTransaction ask
