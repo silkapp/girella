@@ -65,6 +65,9 @@ instance Transaction m => Transaction (StateT s m) where
 instance Transaction m => Transaction (IdentityT m) where
   liftQ = lift . liftQ
 
+instance Transaction m => Transaction (MaybeT m) where
+  liftQ = lift . liftQ
+
 unsafeIOToTransaction :: Transaction m => IO a -> m a
 unsafeIOToTransaction = liftQ . unsafeIOToQ
 
