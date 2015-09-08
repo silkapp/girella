@@ -37,7 +37,7 @@ makeTypes = (fmap concat . mapM makeType =<<)
 
 makeType :: Dec -> Q [Dec]
 makeType = \case
-  DataD [] origTypeName [] [RecC recConName vtys] ds -> return [dataDecl, aliasO, aliasH, toInstance]
+  DataD [] origTypeName [] [RecC recConName vtys] ds -> return [dataDecl, aliasO, aliasH, toInstance, convInstance]
     where
       dataName = (`appendToName` "P") $ ambiguateName origTypeName
       recName = ambiguateName recConName
@@ -70,6 +70,7 @@ makeType = \case
 
       aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) ttysO
       aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) ttysH
+      convInstance = InstanceD [] (ConT (mkName "Conv") `AppT` ConT synNameH) []
 
       toInstance = TySynInstD (mkName "To")
                      (TySynEqn [typ, lhs] rhs)

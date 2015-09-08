@@ -52,8 +52,6 @@ makeTypes [d|
 
 makeAdaptorAndInstance "pPerson" ''PersonP
 
-instance Conv PersonH
-
 makeTable "people" 'pPerson ''PersonP
 
 queryAll :: Query (To Column Person)
