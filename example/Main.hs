@@ -13,7 +13,7 @@ import Data.UUID
 import qualified Data.UUID.V4 as UUID (nextRandom)
 
 import Silk.Opaleye
-import qualified Example
+import qualified User
 
 -- | Set up this example with
 -- > create database test;
@@ -62,10 +62,10 @@ doThings = do
 -- multiple transactions into one.
 --
 -- By combining these queries here we prevent them from running in isolation of each other.
-myTransaction :: Transaction m => UUID -> m [Example.PersonH]
+myTransaction :: Transaction m => UUID -> m [User.UserH]
 myTransaction i = do
-  Example.insert i "Aaron Aardvark" 12 (Just Example.Male)
-  runQuery Example.allByName
+  User.insert i "Aaron Aardvark" 12 (Just User.Male)
+  runQuery User.allByName
 
 -- | The Transformer stack, we need to stuff a Config somewhere in
 -- there to run queries.
