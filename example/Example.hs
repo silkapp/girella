@@ -11,6 +11,9 @@
   #-}
 module Example where
 
+-- Per convention we use 'id' and '(.)' 'from Control.Category' If you
+-- don't want this, use 'returnA' and '<<<' respectively instead.
+
 import Prelude.Compat hiding (id, (.))
 
 import Control.Arrow
@@ -20,9 +23,19 @@ import Data.UUID
 import Silk.Opaleye
 import Silk.Opaleye.TH
 
+-- | We use a newtype to reperesent a foreign key
 newtype Id = Id { unId :: UUID }
   deriving (Show, Typeable)
 
+-- | This generates a number of top level declarations for our type:
+--
+-- > unsafeId :: UUID -> Id
+-- > unsafeId' :: UUID -> Maybe Id
+-- > instance Fromfield Id
+-- > instance ShowConstant Id
+-- > instance PGRep Id ~ a => QueryRunnerColumnDefault Id Id
+-- > instance Conv Id
+--
 mkId ''Id
 
 data Gender = Male | Female
@@ -58,7 +71,7 @@ queryAll :: Query (To Column Person)
 queryAll = queryTable table
 
 byId :: UUID -> Query (To Column Person)
-byId i = where_ (\u -> id' u .== constant (unsafeId i)) . queryAll
+byId i = where_ (\u -> id' u .== constant (Id i)) . queryAll
 
 nameOrder :: Order (To Column Person)
 nameOrder = asc (lower . arr name)
@@ -76,7 +89,7 @@ insert i n a mg =
   where
     psn :: To Maybe (To Column Person)
     psn = Person
-      { id'    = Just $ constant (unsafeId i)
+      { id'    = Just $ constant (Id i)
       , name   = Just $ constant n
       , age    = Just $ constant a
       , gender = Just $ maybeToNullable mg
