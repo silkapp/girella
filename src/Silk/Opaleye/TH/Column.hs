@@ -23,7 +23,6 @@ import Prelude.Compat
 
 import Control.Monad ((<=<))
 import Data.Data (Typeable)
-import Data.Maybe (mapMaybe)
 import Data.Profunctor.Product.Default (Default (def))
 import Data.String.Conversions (StrictByteString, cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
@@ -136,14 +135,14 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
 getTyVars :: Name -> Q [Type]
 getTyVars n = do
   info <- reify n
-  return . mapMaybe onlyPlain $ case info of
+  return . map varToType $ case info of
     TyConI (DataD    _ _ tvars _ _) -> tvars
     TyConI (NewtypeD _ _ tvars _ _) -> tvars
     TyConI (TySynD   _   tvars _  ) -> tvars
     _                               -> []
   where
-    onlyPlain (PlainTV nv) = Just $ VarT nv
-    onlyPlain _            = Nothing
+    varToType (PlainTV nv)    = VarT nv
+    varToType (KindedTV nv _) = VarT nv
 
 fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe StrictByteString -> Conversion b
 fromFieldAux fromDb f mdata = case mdata of
