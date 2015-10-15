@@ -54,7 +54,7 @@ moffset :: Maybe Offset -> Query a -> Query a
 moffset = maybe id offset
 
 offset :: Offset -> Query a -> Query a
-offset = O.limit . unOffset
+offset = O.offset . unOffset
 
 getOffset :: Range -> Int
 getOffset = unOffset . fst
