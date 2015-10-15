@@ -44,7 +44,7 @@ mrange :: Maybe Range -> Query a -> Query a
 mrange = maybe id range
 
 range :: Range -> Query a -> Query a
-range (Offset o, Limit l) = O.offset o . O.limit l
+range (Offset o, Limit l) = O.limit l . O.offset o
 
 
 newtype Offset = Offset { unOffset :: Int }
