@@ -16,7 +16,6 @@ module Silk.Opaleye.Json
   ) where
 
 import Data.Aeson.Utils
-import Data.String.Conversions
 import Language.Haskell.TH
 
 import Silk.Opaleye.TH
@@ -24,13 +23,10 @@ import Silk.Opaleye.TH
 newtype Json = Json { unJson :: Value }
   deriving (Eq, FromJSON, Show, ToJSON, Typeable)
 
-jsonToText :: Json -> StrictText
-jsonToText = cs . encode . unJson
+mkJson :: Value -> Maybe Json
+mkJson = Just . Json
 
-textToJson :: StrictText -> Maybe Json
-textToJson = decodeV . cs
-
-makeColumnInstances ''Json ''StrictText 'jsonToText 'textToJson
+makeColumnInstances ''Json ''Value 'unJson 'mkJson
 
 toJson :: ToJSON a => a -> Json
 toJson = Json . toJSON

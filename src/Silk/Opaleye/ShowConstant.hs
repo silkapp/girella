@@ -17,6 +17,7 @@ import Data.Int (Int64)
 import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
+import qualified Data.Aeson as Json
 
 import Opaleye.Column (Column)
 import Opaleye.PGTypes
@@ -143,6 +144,10 @@ instance ShowConstant (CI LazyText) where
   constant = safeCoerceFromRep . pgCiLazyText
 instance QueryRunnerColumnDefault (CI LazyText) (CI LazyText) where
   queryRunnerColumnDefault = qrcDef
+
+instance ShowConstant Json.Value where
+  type PGRep Json.Value = PGJson
+  constant = safeCoerceFromRep . pgValueJSON
 
 qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
 qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRunnerColumnDefault
