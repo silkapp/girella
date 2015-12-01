@@ -75,6 +75,18 @@ instance ShowConstant LazyText where
 instance QueryRunnerColumnDefault LazyText LazyText where
   queryRunnerColumnDefault = qrcDef
 
+instance ShowConstant LazyByteString where
+  type PGRep LazyByteString = PGBytea
+  constant = safeCoerceFromRep . pgLazyByteString
+instance QueryRunnerColumnDefault LazyByteString LazyByteString where
+  queryRunnerColumnDefault = qrcDef
+
+instance ShowConstant StrictByteString where
+  type PGRep StrictByteString = PGBytea
+  constant = safeCoerceFromRep . pgStrictByteString
+instance QueryRunnerColumnDefault StrictByteString StrictByteString where
+  queryRunnerColumnDefault = qrcDef
+
 instance ShowConstant Int where
   type PGRep Int = PGInt4
   constant = safeCoerceFromRep . pgInt4
