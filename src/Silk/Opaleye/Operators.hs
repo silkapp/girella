@@ -10,9 +10,13 @@ module Silk.Opaleye.Operators
   , (.||)
   , (.&&)
   , (.>)
+  , (.>?)
   , (.<)
+  , (.<?)
   , (.>=)
+  , (.>=?)
   , (.<=)
+  , (.<=?)
   , upper
   , lower
   , like
@@ -69,17 +73,33 @@ infix 4 .>
 (.>) :: PGOrd (PGRep a)  => Column a -> Column a -> Column Bool
 a .> b = safeCoerceFromRep $ safeCoerceToRep a O..> safeCoerceToRep b
 
+infix 4 .>?
+(.>?) :: Column (Nullable a) -> Column (Nullable a) -> Column Bool
+a .>? b = safeCoerceFromRep $ a O..> b
+
 infix 4 .<
 (.<) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .< b = safeCoerceFromRep $ safeCoerceToRep a O..< safeCoerceToRep b
+
+infix 4 .<?
+(.<?) :: Column (Nullable a) -> Column (Nullable a) -> Column Bool
+a .<? b = safeCoerceFromRep $ a O..< b
 
 infix 4 .>=
 (.>=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .>= b = safeCoerceFromRep $ safeCoerceToRep a O..>= safeCoerceToRep b
 
+infix 4 .>=?
+(.>=?) :: Column (Nullable a) -> Column (Nullable a) -> Column Bool
+a .>=? b = safeCoerceFromRep $ a O..>= b
+
 infix 4 .<=
 (.<=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
 a .<= b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
+
+infix 4 .<=?
+(.<=?) :: Column (Nullable a) -> Column (Nullable a) -> Column Bool
+a .<=? b = safeCoerceFromRep $ a O..<= b
 
 upper :: PGRep a ~ PGText => Column a -> Column a
 upper = safeCoerceFromRep . O.upper . safeCoerceToRep

@@ -7,7 +7,9 @@ module Silk.Opaleye.Aggregation
   , count
   , avg
   , max_
+  , maxNullable
   , min_
+  , minNullable
   , boolOr
   , boolAnd
 --  , stringAgg
@@ -29,6 +31,7 @@ import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, m
 
 import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant (PGRep, safeCoerceFromRep, safeCoerceToRep)
+import Silk.Opaleye.TH
 
 groupBy_ :: Aggregator (Column a) (Column a)
 groupBy_ = A.groupBy
@@ -45,8 +48,14 @@ avg = safeCoerceAgg A.avg
 max_ :: PGOrd (PGRep a) => Aggregator (Column a) (Column a)
 max_ = safeCoerceAgg A.max
 
+maxNullable :: Aggregator (Column (Nullable a)) (Column (Nullable a))
+maxNullable = A.max
+
 min_ :: PGOrd (PGRep a) => Aggregator (Column a) (Column a)
 min_ = safeCoerceAgg A.min
+
+minNullable :: Aggregator (Column (Nullable a)) (Column (Nullable a))
+minNullable = A.min
 
 boolOr :: PGRep a ~ PGBool => Aggregator (Column a) (Column a)
 boolOr = safeCoerceAgg A.boolOr
