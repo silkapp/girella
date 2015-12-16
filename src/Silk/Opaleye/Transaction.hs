@@ -99,6 +99,9 @@ instance MonadPool m => MonadPool (ExceptT e m) where
 instance MonadPool m => MonadPool (MaybeT m) where
   runTransaction = lift . runTransaction
 
+instance MonadPool m => MonadPool (StateT s m) where
+  runTransaction = lift . runTransaction
+
 instance MonadPool (ReaderT (Config a) IO) where
   runTransaction = defaultRunTransaction ask
 
