@@ -25,13 +25,12 @@ import Data.Int (Int64)
 import Data.Profunctor (Profunctor, dimap)
 
 import Opaleye.Aggregate (Aggregator, aggregate)
-import Opaleye.Column (Column)
+import Opaleye.Column (Column, Nullable)
 import Opaleye.PGTypes (PGBool)
 import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, sum)
 
 import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant (PGRep, safeCoerceFromRep, safeCoerceToRep)
-import Silk.Opaleye.TH
 
 groupBy_ :: Aggregator (Column a) (Column a)
 groupBy_ = A.groupBy
