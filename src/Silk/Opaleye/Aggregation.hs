@@ -22,7 +22,7 @@ module Silk.Opaleye.Aggregation
   ) where
 
 import Data.Int (Int64)
-import Data.Profunctor (Profunctor, dimap)
+import Data.Profunctor (Profunctor, dimap, rmap)
 
 import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column, Nullable)
@@ -30,30 +30,34 @@ import Opaleye.PGTypes (PGBool)
 import qualified Opaleye.Aggregate as A (avg, boolAnd, boolOr, count, groupBy, max, min, sum)
 
 import Silk.Opaleye.Compat (PGOrd)
-import Silk.Opaleye.ShowConstant (PGRep, safeCoerceFromRep, safeCoerceToRep)
+import Silk.Opaleye.ShowConstant (PGRep, ShowConstant, safeCoerceFromRep, safeCoerceToRep)
 
 groupBy_ :: Aggregator (Column a) (Column a)
 groupBy_ = A.groupBy
 
-sum_ :: Aggregator (Column a) (Column a)
+-- TODO Constrain to numeric types.
+-- http://www.postgresql.org/docs/9.4/static/functions-aggregate.html
+sum_ :: ShowConstant a => Aggregator (Column a) (Column a)
 sum_ = safeCoerceAgg A.sum
 
-count :: Aggregator (Column a) (Column Int64)
-count = dimap id safeCoerceFromRep A.count
+count :: ShowConstant a => Aggregator (Column a) (Column Int64)
+count = rmap safeCoerceFromRep A.count
 
+-- TODO Expand to numeric input (even integral)
+-- http://www.postgresql.org/docs/9.4/static/functions-aggregate.html
 avg :: Aggregator (Column Double) (Column Double)
 avg = safeCoerceAgg A.avg
 
 max_ :: PGOrd (PGRep a) => Aggregator (Column a) (Column a)
 max_ = safeCoerceAgg A.max
 
-maxNullable :: Aggregator (Column (Nullable a)) (Column (Nullable a))
+maxNullable :: PGOrd (PGRep a) => Aggregator (Column (Nullable a)) (Column (Nullable a))
 maxNullable = A.max
 
 min_ :: PGOrd (PGRep a) => Aggregator (Column a) (Column a)
 min_ = safeCoerceAgg A.min
 
-minNullable :: Aggregator (Column (Nullable a)) (Column (Nullable a))
+minNullable :: PGOrd (PGRep a) => Aggregator (Column (Nullable a)) (Column (Nullable a))
 minNullable = A.min
 
 boolOr :: PGRep a ~ PGBool => Aggregator (Column a) (Column a)
