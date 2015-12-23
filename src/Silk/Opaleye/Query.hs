@@ -1,5 +1,6 @@
 {-# LANGUAGE
     FlexibleContexts
+  , ImplicitParams
   , TypeFamilies
   #-}
 module Silk.Opaleye.Query
@@ -15,9 +16,13 @@ module Silk.Opaleye.Query
 
 import Control.Monad.Reader
 import Data.Int (Int64)
+import Data.Maybe
 import Data.Profunctor.Product.Default
+import GHC.SrcLoc
+import GHC.Stack
 import Safe
 
+import Opaleye.Label (label)
 import Opaleye.Manipulation (Unpackspec)
 import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
@@ -69,16 +74,19 @@ runDelete tab cond = liftQ $ do
 
 -- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
 runQueryInternal
-  :: ( Default QueryRunner columns haskells
+  :: ( ?loc :: CallStack
+     , Default QueryRunner columns haskells
      , Transaction m
      )
   => Query columns -> m [haskells]
 runQueryInternal q = liftQ  $ do
   conn <- ask
-  unsafeIOToTransaction $ M.runQuery conn q
+  unsafeIOToTransaction . M.runQuery conn $ label (ppCallStack ?loc) q
+  where ppCallStack = fromMaybe "no call stack available" . fmap (showSrcLoc . snd) . lastMay . getCallStack
 
 -- | Run a query and convert the result using Conv.
-runQuery :: ( Default QueryRunner columns haskells
+runQuery :: ( ?loc :: CallStack
+            , Default QueryRunner columns haskells
             , Default Unpackspec columns columns
             , haskells ~ OpaRep domain
             , Conv domain
@@ -90,7 +98,8 @@ runQuery q =
   fmap conv . runQueryInternal $ q
 
 -- | Same as 'queryConv' but only fetches the first row.
-runQueryFirst :: ( Default Unpackspec columns columns
+runQueryFirst :: ( ?loc :: CallStack
+                 , Default Unpackspec columns columns
                  , Default QueryRunner columns (OpaRep domain)
                  , Conv domain
                  , Transaction m
