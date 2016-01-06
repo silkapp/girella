@@ -79,7 +79,7 @@ runQueryInternal
      , Transaction m
      )
   => Query columns -> m [haskells]
-runQueryInternal q = liftQ  $ do
+runQueryInternal q = liftQ $ do
   conn <- ask
   unsafeIOToTransaction . M.runQuery conn $ label (ppCallStack ?loc) q
   where ppCallStack = fromMaybe "no call stack available" . fmap (showSrcLoc . snd) . lastMay . getCallStack
