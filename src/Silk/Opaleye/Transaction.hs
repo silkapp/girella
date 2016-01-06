@@ -2,6 +2,7 @@
 {-# LANGUAGE
     FlexibleContexts
   , FlexibleInstances
+  , NoImplicitPrelude
   , OverlappingInstances
   , OverloadedStrings
   , ScopedTypeVariables
