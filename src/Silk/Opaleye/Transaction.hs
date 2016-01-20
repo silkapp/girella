@@ -3,7 +3,6 @@
     FlexibleContexts
   , FlexibleInstances
   , NoImplicitPrelude
-  , OverlappingInstances
   , OverloadedStrings
   , ScopedTypeVariables
   #-}
@@ -88,7 +87,7 @@ instance Transaction m => Transaction (MaybeT m) where
 class (Functor m, Applicative m, Monad m) => MonadPool m where
   runTransaction :: Q a -> m a
 
-instance MonadPool m => MonadPool (ReaderT r m) where
+instance {-# OVERLAPPABLE #-} MonadPool m => MonadPool (ReaderT r m) where
   runTransaction = lift . runTransaction
 
 instance (MonadPool m, Error e) => MonadPool (ErrorT e m) where
@@ -103,7 +102,7 @@ instance MonadPool m => MonadPool (MaybeT m) where
 instance MonadPool m => MonadPool (StateT s m) where
   runTransaction = lift . runTransaction
 
-instance MonadPool (ReaderT (Config a) IO) where
+instance {-# OVERLAPPING #-} MonadPool (ReaderT (Config a) IO) where
   runTransaction = defaultRunTransaction ask
 
 -- | Run an arbitrary IO computation inside a Transaction. I hope you
