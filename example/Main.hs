@@ -1,7 +1,7 @@
 {-# LANGUAGE
     GeneralizedNewtypeDeriving
   , InstanceSigs
-  , NoMonomorphismRestriction
+  , NoImplicitPrelude
   , ScopedTypeVariables
   #-}
 module Main (main) where
