@@ -12,15 +12,18 @@ module Silk.Opaleye.Query
   , runQueryInternal
   , runQuery
   , runQueryFirst
+  , runQueryString
   ) where
 
 import Control.Monad.Reader
 import Data.Int (Int64)
 import Data.Maybe
 import Data.Profunctor.Product.Default
+import Data.String (IsString (fromString))
 import GHC.SrcLoc
 import GHC.Stack
 import Safe
+import qualified Database.PostgreSQL.Simple as PG
 
 import Opaleye.Label (label)
 import Opaleye.Manipulation (Unpackspec)
@@ -105,3 +108,8 @@ runQueryFirst :: ( ?loc :: CallStack
                  , Transaction m
                  ) => Query columns -> m (Maybe domain)
 runQueryFirst = fmap headMay . runQuery
+
+runQueryString :: (PG.ToRow params, PG.FromRow res, Transaction m) => String -> params -> m [res]
+runQueryString q params = liftQ $ do
+  conn <- ask
+  unsafeIOToTransaction $ PG.query conn (fromString q) params
