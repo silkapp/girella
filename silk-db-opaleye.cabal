@@ -20,7 +20,7 @@ executable example
     User.Columns
   build-depends:
       base >= 4.6 && < 4.9
-    , base-compat >= 0.8.2 && < 0.9
+    , base-compat >= 0.8.2 && < 0.10
     , mtl >= 2.0 && < 2.3
     , mtl-compat >= 0.1 && < 0.3
     , silk-db-opaleye
@@ -59,16 +59,16 @@ library
   build-depends:
       base >= 4.6 && < 4.9
     , aeson-utils >= 0.2 && < 0.4
-    , base-compat >= 0.8.2 && < 0.9
+    , base-compat >= 0.8.2 && < 0.10
     , case-insensitive == 1.2.*
-    , contravariant >= 1.2 && < 1.4
+    , contravariant >= 1.2 && < 1.5
     , hslogger >= 1.1 && < 1.3
     , mtl >= 2.0 && < 2.3
     , mtl-compat >= 0.1 && < 0.3
     , opaleye >= 0.3.1 && < 0.4
-    , postgresql-simple >= 0.4.8 && < 0.5
+    , postgresql-simple >= 0.4.8 && < 0.6
     , product-profunctors >= 0.5 && < 0.7
-    , profunctors >= 4.2 && < 5.2
+    , profunctors >= 4.2 && < 5.3
     , resource-pool == 0.2.*
     , safe == 0.3.*
     , string-conversions > 0.3 && < 0.5
