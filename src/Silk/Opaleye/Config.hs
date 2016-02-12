@@ -24,7 +24,7 @@ module Silk.Opaleye.Config
 import Control.Exception (Exception)
 import Data.Pool (Pool, createPool)
 import Database.PostgreSQL.Simple (ConnectInfo (..), Connection)
-import System.IO (hPutStrLn, stderr)
+import System.Log.Logger (warningM)
 import qualified Database.PostgreSQL.Simple as PG
 
 data Config a = Config
@@ -66,7 +66,7 @@ defaultBeforeTransaction = return ()
 
 -- | Default onRetry hook, prints a warning.
 defaultOnRetry :: Exception e => e -> a -> IO ()
-defaultOnRetry e _ = hPutStrLn stderr $ "Warning: Exception during database action, retrying: " ++ show e
+defaultOnRetry e _ = warningM "silk-db-opaleye" $ "Exception during database action, retrying: " ++ show e
 
 -- | Default afterTransaction hook, does nothing.
 defaultAfterTransaction :: a -> IO ()
