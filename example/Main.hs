@@ -27,7 +27,7 @@ main = do
   -- The default setting type is 'Config_' = 'Config ()', See
   -- 'Girella.Config' for more info about the type argument.
   cfg :: Config_
-      <- defaultConfig $ ConnectInfo
+      <- defaultConfig ConnectInfo
            { connectHost     = "localhost"
            , connectPort     = 5432
            , connectUser     = "test"
@@ -46,7 +46,7 @@ runMyTransStack cfg = flip runReaderT cfg . unTransStack
 
 -- | Runs our queries in just a 'ReaderT' instead.
 runInReaderT :: Config c -> ReaderT (Config c) IO a -> IO a
-runInReaderT cfg = flip runReaderT cfg
+runInReaderT = flip runReaderT
 
 -- | 'MonadPool' denotes an environment that can run transactions of
 -- queries. Transactions in MonadPool's can't be combined, they will
