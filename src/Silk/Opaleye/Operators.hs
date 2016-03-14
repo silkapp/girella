@@ -53,7 +53,8 @@ infix 4 .==
 a .== b = safeCoerceFromRep $ a O..== b
 
 infix 4 .==?
--- | Compare two nullables with SQL semantics, null /= null
+-- | Compare two nullables with SQL semantics; null /= null.
+-- If you want to check if a value is null, use 'isNull' instead.
 (.==?) :: ShowConstant a => Column (Nullable a) -> Column (Nullable a) -> Column Bool
 a .==? b = safeCoerceFromRep $ a O..== b
 
