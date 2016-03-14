@@ -9,6 +9,7 @@ module Silk.Opaleye.Query
   , runUpdate
   , runUpdateConst
   , runDelete
+  , runQueryInternalExplicit
   , runQueryInternal
   , runQuery
   , runQueryFirst
@@ -31,7 +32,7 @@ import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
 import Opaleye.Table
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
-import qualified Opaleye.RunQuery     as M (runQuery)
+import qualified Opaleye.RunQuery     as M (runQueryExplicit)
 
 import Silk.Opaleye.Conv
 import Silk.Opaleye.ShowConstant
@@ -76,16 +77,24 @@ runDelete tab cond = liftQ $ do
   unsafeIOToTransaction $ M.runDelete conn tab (safeCoerceToRep . cond)
 
 -- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
+runQueryInternalExplicit
+  :: ( ?loc :: CallStack
+     , Transaction m
+     )
+  => QueryRunner columns haskells -> Query columns -> m [haskells]
+runQueryInternalExplicit qr q = liftQ $ do
+  conn <- ask
+  unsafeIOToTransaction . M.runQueryExplicit qr conn $ label (ppCallStack ?loc) q
+  where ppCallStack = fromMaybe "no call stack available" . fmap (showSrcLoc . snd) . lastMay . getCallStack
+
+-- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
 runQueryInternal
   :: ( ?loc :: CallStack
      , Default QueryRunner columns haskells
      , Transaction m
      )
   => Query columns -> m [haskells]
-runQueryInternal q = liftQ $ do
-  conn <- ask
-  unsafeIOToTransaction . M.runQuery conn $ label (ppCallStack ?loc) q
-  where ppCallStack = fromMaybe "no call stack available" . fmap (showSrcLoc . snd) . lastMay . getCallStack
+runQueryInternal = runQueryInternalExplicit def
 
 -- | Run a query and convert the result using Conv.
 runQuery :: ( ?loc :: CallStack
