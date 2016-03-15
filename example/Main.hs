@@ -2,6 +2,7 @@
     GeneralizedNewtypeDeriving
   , InstanceSigs
   , NoImplicitPrelude
+  , OverloadedStrings
   , ScopedTypeVariables
   #-}
 module Main (main) where

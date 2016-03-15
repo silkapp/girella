@@ -37,6 +37,7 @@ module User
 import Prelude.Compat hiding (id, (.))
 
 import Control.Category
+import Data.Text (Text)
 import Data.UUID
 
 import Silk.Opaleye
@@ -78,7 +79,7 @@ import User.Columns
 makeTypes [d|
     data User = User
       { id'    :: Id
-      , name   :: String
+      , name   :: Text
       , age    :: Int
       , gender :: Nullable Gender
       } deriving Show
@@ -147,7 +148,7 @@ allByName = orderBy nameOrder queryAll
 runById :: Transaction m => Id -> m (Maybe UserH)
 runById = runQueryFirst . byId
 
-insert :: Transaction m => UUID -> String -> Int -> Maybe Gender -> m ()
+insert :: Transaction m => UUID -> Text -> Int -> Maybe Gender -> m ()
 insert i n a mg =
   runInsert table psn
   where
@@ -159,7 +160,7 @@ insert i n a mg =
       , gender = Just $ maybeToNullable mg
       }
 
-update :: Transaction m => String -> Int -> Maybe Gender -> m Bool
+update :: Transaction m => Text -> Int -> Maybe Gender -> m Bool
 update n a mg = (> 0) <$> runUpdate table upd condition
   where
     upd :: To Column User -> To Maybe (To Column User)
@@ -173,11 +174,11 @@ update n a mg = (> 0) <$> runUpdate table upd condition
     condition p = name p .== constant n
 
 -- Type sig can be generalized to Conv as above.
-insertAndSelectAll :: Transaction m => UUID -> String -> Int -> Maybe Gender -> m [UserH]
+insertAndSelectAll :: Transaction m => UUID -> Text -> Int -> Maybe Gender -> m [UserH]
 insertAndSelectAll i n a mg = do
   insert i n a mg
   runQuery queryAll
 
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
-runInsertAndSelectAll :: MonadPool m => UUID -> String -> Int -> Maybe Gender -> m [UserH]
+runInsertAndSelectAll :: MonadPool m => UUID -> Text -> Int -> Maybe Gender -> m [UserH]
 runInsertAndSelectAll i n a mg = runTransaction $ insertAndSelectAll i n a mg

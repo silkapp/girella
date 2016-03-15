@@ -2,6 +2,7 @@
     DeriveDataTypeable
   , LambdaCase
   , MultiParamTypeClasses
+  , OverloadedStrings
   , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances
@@ -14,6 +15,7 @@ module User.Columns
 -- Per convention we use 'id' and '(.)' 'from Control.Category' If you
 -- don't want this, use 'returnA' and '<<<' respectively instead.
 
+import Data.Text (Text)
 import Data.UUID
 
 import Silk.Opaleye
@@ -68,13 +70,13 @@ mkId ''Id
 data Gender = Male | Female
   deriving (Show, Typeable)
 
-genderToString :: Gender -> String
-genderToString = \case
+genderToText :: Gender -> Text
+genderToText = \case
   Male   -> "male"
   Female -> "female"
 
-stringToGender :: String -> Maybe Gender
-stringToGender = \case
+textToGender :: Text -> Maybe Gender
+textToGender = \case
   "male"   -> Just Male
   "female" -> Just Female
   _        -> Nothing
@@ -96,4 +98,4 @@ stringToGender = \case
 -- Converting to a Gender from an opaleye value (this is the identity)
 -- > instance Conv Gender
 --
-makeColumnInstances ''Gender ''String 'genderToString 'stringToGender
+makeColumnInstances ''Gender ''Text 'genderToText 'textToGender

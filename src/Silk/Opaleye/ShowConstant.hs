@@ -57,11 +57,6 @@ safeCoerceFromRep = unsafeCoerceColumn
 safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
 safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
-instance ShowConstant [Char] where
-  type PGRep String = PGText
-  constant = safeCoerceFromRep . pgString
-instance QueryRunnerColumnDefault [Char] [Char] where
-  queryRunnerColumnDefault = qrcDef
 
 instance ShowConstant StrictText where
   type PGRep StrictText = PGText
