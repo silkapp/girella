@@ -8,6 +8,7 @@ module Silk.Opaleye.Combinators
   , whereEq
   , innerJoinOn
   , leftJoin
+  , leftJoinExplicit
   -- * Re-exports
   , restrict
   ) where
@@ -21,7 +22,7 @@ import Data.Profunctor.Product.Default
 import Opaleye.Internal.Join (NullMaker)
 import Opaleye.Manipulation (Unpackspec)
 import Opaleye.QueryArr
-import qualified Opaleye.Join      as J (leftJoin)
+import qualified Opaleye.Join      as J
 import qualified Opaleye.Operators as O
 
 import Silk.Opaleye.Operators
@@ -51,15 +52,26 @@ infixr 4 `innerJoinOn`
 -- | A normal SQL left join.
 --
 -- Usually it's nicest to do left joins first out of joins in a query.
+leftJoinExplicit
+  :: Unpackspec columnsA columnsA
+  -> Unpackspec columnsB columnsB
+  -> NullMaker columnsB nullableColumnsB
+  -> Query columnsA
+  -> Query columnsB
+  -> ((columnsA, columnsB) -> Column Bool)
+  -> Query (columnsA, nullableColumnsB)
+leftJoinExplicit unA unB nulB a b f = J.leftJoinExplicit unA unB nulB a b (safeCoerceToRep . f)
+
 leftJoin ::
   ( Default Unpackspec columnsA columnsA
   , Default Unpackspec columnsB columnsB
   , Default NullMaker columnsB nullableColumnsB
   )
-  => Query columnsA -> Query columnsB
+  => Query columnsA
+  -> Query columnsB
   -> ((columnsA, columnsB) -> Column Bool)
   -> Query (columnsA, nullableColumnsB)
-leftJoin a b f = J.leftJoin a b (safeCoerceToRep . f)
+leftJoin = leftJoinExplicit def def def
 
 -- | Opaleye's 'restrict' over a 'Bool'.
 restrict :: QueryArr (Column Bool) ()
