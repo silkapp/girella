@@ -68,20 +68,20 @@ makeColumnInstancesWithoutConv tyName innerTyName toDb fromDb = makeColumnInstan
 makeColumnInstancesInternal :: Name -> Type -> Name -> Either Name Name -> Bool -> Q [Dec]
 makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   tvars <- getTyVars tyName
-  let predCond = map (classP_ (mkName "Typeable") . (:[])) tvars
+  let predCond = map (classP_ (''Typeable) . (:[])) tvars
   let outterTy = foldl AppT (ConT tyName) tvars
   return $ map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ if convInstance then [conv] else []
   where
     fromFld (predCond, outterTy)
       = InstanceD
           predCond
-          (ConT (mkName "FromField") `AppT` outterTy)
-          [ FunD (mkName "fromField")
+          (ConT ''FromField `AppT` outterTy)
+          [ FunD 'fromField
             [ Clause
                 []
                 (NormalB $ case fromDb of
-                   Left  l -> VarE (mkName "fromFieldTotal") `AppE` ConE l
-                   Right r -> VarE (mkName "fromFieldAux"  ) `AppE` VarE r
+                   Left  l -> VarE 'fromFieldTotal `AppE` ConE l
+                   Right r -> VarE 'fromFieldAux   `AppE` VarE r
                 )
                 []
             ]
@@ -90,13 +90,13 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
     showConst (_, outterTy)
       = InstanceD
           []
-          (ConT (mkName "ShowConstant") `AppT` outterTy)
-          [ FunD (mkName "constant")
+          (ConT ''ShowConstant `AppT` outterTy)
+          [ FunD 'constant
             [ Clause []
               (NormalB $ InfixE
-               (Just (VarE (mkName "unsafeCoerceColumn")))
+               (Just (VarE 'unsafeCoerceColumn))
                (VarE (mkName "."))
-               (Just (InfixE (Just (VarE (mkName "constant"))) (VarE (mkName ".")) (Just (VarE toDb))))
+               (Just (InfixE (Just (VarE 'constant)) (VarE (mkName ".")) (Just (VarE toDb))))
               )
               []
             ]
@@ -104,12 +104,12 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
     queryRunnerColumn (predCond, outterTy)
       = InstanceD
           (equalP_ (ConT ''PGRep `AppT` outterTy) (VarT $ mkName "a") : predCond)
-          (ConT (mkName "QueryRunnerColumnDefault") `AppT` outterTy `AppT` outterTy)
+          (ConT ''QueryRunnerColumnDefault `AppT` outterTy `AppT` outterTy)
           [ FunD
-            (mkName "queryRunnerColumnDefault")
-            [ Clause [] (NormalB $ VarE $ mkName "fieldQueryRunnerColumn") [] ]
+            'queryRunnerColumnDefault
+            [ Clause [] (NormalB $ VarE 'fieldQueryRunnerColumn) [] ]
           ]
-    conv (_, outerTy) = InstanceD [] (ConT (mkName "Conv") `AppT` outerTy) []
+    conv (_, outerTy) = InstanceD [] (ConT ''Conv `AppT` outerTy) []
 
 getTyVars :: Name -> Q [Type]
 getTyVars n = do

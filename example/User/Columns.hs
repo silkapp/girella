@@ -18,7 +18,6 @@ module User.Columns
 import Data.Text (Text)
 import Data.UUID
 
-import Silk.Opaleye
 import Silk.Opaleye.TH
 
 -- | We use a newtype to reperesent a foreign key
