@@ -71,6 +71,7 @@ class ShowConstant a where
   constant :: a -> Column a
 
 type instance PGRep (Maybe a) = Nullable (PGRep a)
+type instance PGRep (Nullable a) = Nullable (PGRep a)
 
 type instance PGRep [a] = PGArray (PGRep a)
 instance ShowConstant a => ShowConstant [a] where
