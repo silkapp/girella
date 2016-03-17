@@ -17,6 +17,7 @@ module Silk.Opaleye.Json
 
 import Data.Aeson.Utils
 import Data.String.Conversions
+import Data.Typeable
 import Language.Haskell.TH
 
 import Silk.Opaleye.TH

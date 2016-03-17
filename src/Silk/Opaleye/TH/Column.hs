@@ -4,32 +4,19 @@ module Silk.Opaleye.TH.Column
     mkId
   , makeColumnInstances
   , makeColumnInstancesWithoutConv
-    -- * TH dependencies defined here
-  , fromFieldTotal
+
   , fromFieldAux
-    -- * Re-exported TH dependencies
-  , Typeable
-  , Default (def)
-  , ShowConstant (..)
-  , FromField (fromField)
-  , QueryRunnerColumnDefault (..)
-  , Nullable
-  , Column
-  , fieldQueryRunnerColumn
-  , unsafeCoerceColumn
-  , Conv
+  , fromFieldTotal
   ) where
 
 import Prelude.Compat
 
 import Control.Monad ((<=<))
 import Data.Data (Typeable)
-import Data.Profunctor.Product.Default (Default (def))
 import Data.String.Conversions (StrictByteString, cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
                                              returnError)
 import Language.Haskell.TH
-import Opaleye.Column (Column, Nullable)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
 
 import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)

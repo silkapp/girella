@@ -16,6 +16,7 @@ module User.Columns
 -- don't want this, use 'returnA' and '<<<' respectively instead.
 
 import Data.Text (Text)
+import Data.Typeable (Typeable)
 import Data.UUID
 
 import Silk.Opaleye.TH

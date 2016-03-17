@@ -13,6 +13,9 @@ module Silk.Opaleye
   , queryTable
   , required
   , optionalColumn
+  , unsafeCoerceColumn
+  , QueryRunnerColumnDefault (queryRunnerColumnDefault)
+  , FromField (fromField)
 
   -- * Opaleye.Column re-exports
   , matchNullable
@@ -36,14 +39,17 @@ import Control.Arrow
 import Data.Functor.Contravariant (Contravariant (..))
 import Data.Int (Int64)
 import Data.Profunctor (lmap)
+import Database.PostgreSQL.Simple.FromField (FromField (fromField))
 
 import Opaleye.Column (matchNullable, toNullable)
 import Opaleye.PGTypes
 import Opaleye.QueryArr (Query, QueryArr)
+import Opaleye.RunQuery (fieldQueryRunnerColumn)
 import Opaleye.Table (queryTable, required)
 
 import Silk.Opaleye.Aggregation
 import Silk.Opaleye.Combinators
+import Silk.Opaleye.Compat
 import Silk.Opaleye.Config
 import Silk.Opaleye.Conv
 import Silk.Opaleye.Misc
