@@ -2,7 +2,9 @@
 module Silk.Opaleye.Order
   ( Order
   , asc
+  , ascNullsFirst
   , desc
+  , descNullsLast
   , orderBy
   ) where
 
@@ -18,3 +20,9 @@ asc f = O.asc $ safeCoerceToRep . f
 
 desc :: PGOrd (PGRep b) => (a -> Column b) -> Order a
 desc f = O.desc $ safeCoerceToRep . f
+
+ascNullsFirst :: PGOrd (PGRep b) => (a -> Column b) -> Order a
+ascNullsFirst f = O.ascNullsFirst $ safeCoerceToRep . f
+
+descNullsLast :: PGOrd (PGRep b) => (a -> Column b) -> Order a
+descNullsLast f = O.descNullsLast $ safeCoerceToRep . f
