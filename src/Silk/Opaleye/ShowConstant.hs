@@ -7,7 +7,8 @@
   , FlexibleContexts
   #-}
 module Silk.Opaleye.ShowConstant
-  ( ShowConstant (..)
+  ( PGRep
+  , ShowConstant (..)
   , safeCoerceToRep
   , safeCoerceFromRep
   , safelyWrapped
@@ -46,9 +47,10 @@ import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 --
 -- The instances defined in this module correspond directly to the
 -- types Opaleye supports.
-class ShowConstant a where
-  type PGRep a :: *
-  constant :: a -> Column a
+
+-- | The postgres representation of a Haskell type.
+
+type family PGRep a :: *
 
 -- | It's always safe to coerce to the underlying representation.
 safeCoerceToRep :: PGRep a ~ b => Column a -> Column b
@@ -62,8 +64,14 @@ safeCoerceFromRep = unsafeCoerceColumn
 safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
 safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
+-- | A class for Haskell values that can be converted to postgres
+-- literal constants.
+
+class ShowConstant a where
+  constant :: a -> Column a
+
+type instance PGRep [a] = PGArray (PGRep a)
 instance ShowConstant a => ShowConstant [a] where
-  type PGRep [a] = PGArray (PGRep a)
   constant = safeCoerceFromRep . pgArray (safeCoerceToRep . constant)
 
 pgArray :: (a -> Column b) -> [a] -> Column (PGArray b)
@@ -78,80 +86,80 @@ instance (Typeable b, QueryRunnerColumnDefault a b)
   queryRunnerColumnDefault = queryRunnerColumn unsafeCoerceColumn id
                                (queryRunnerColumnDefault :: QueryRunnerColumn (PGArray a) [b])
 
+type instance PGRep StrictText = PGText
 instance ShowConstant StrictText where
-  type PGRep StrictText = PGText
   constant = safeCoerceFromRep . pgStrictText
 instance QueryRunnerColumnDefault StrictText StrictText where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep LazyText = PGText
 instance ShowConstant LazyText where
-  type PGRep LazyText = PGText
   constant = safeCoerceFromRep . pgLazyText
 instance QueryRunnerColumnDefault LazyText LazyText where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep LazyByteString = PGBytea
 instance ShowConstant LazyByteString where
-  type PGRep LazyByteString = PGBytea
   constant = safeCoerceFromRep . pgLazyByteString
 instance QueryRunnerColumnDefault LazyByteString LazyByteString where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep StrictByteString = PGBytea
 instance ShowConstant StrictByteString where
-  type PGRep StrictByteString = PGBytea
   constant = safeCoerceFromRep . pgStrictByteString
 instance QueryRunnerColumnDefault StrictByteString StrictByteString where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep Int = PGInt4
 instance ShowConstant Int where
-  type PGRep Int = PGInt4
   constant = safeCoerceFromRep . pgInt4
 instance QueryRunnerColumnDefault Int Int where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep Int64 = PGInt8
 instance ShowConstant Int64 where
-  type PGRep Int64 = PGInt8
   constant = safeCoerceFromRep . pgInt8
 instance QueryRunnerColumnDefault Int64 Int64 where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep Double = PGFloat8
 instance ShowConstant Double where
-  type PGRep Double = PGFloat8
   constant = safeCoerceFromRep . pgDouble
 instance QueryRunnerColumnDefault Double Double where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep Bool = PGBool
 instance ShowConstant Bool where
-  type PGRep Bool = PGBool
   constant = safeCoerceFromRep . pgBool
 instance QueryRunnerColumnDefault Bool Bool where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep UUID = PGUuid
 instance ShowConstant UUID where
-  type PGRep UUID = PGUuid
   constant = safeCoerceFromRep . pgUUID
 instance QueryRunnerColumnDefault UUID UUID where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep Day = PGDate
 instance ShowConstant Day where
-  type PGRep Day = PGDate
   constant = safeCoerceFromRep . pgDay
 instance QueryRunnerColumnDefault Day Day where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep UTCTime = PGTimestamptz
 instance ShowConstant UTCTime where
-  type PGRep UTCTime = PGTimestamptz
   constant = safeCoerceFromRep . pgUTCTime
 instance QueryRunnerColumnDefault UTCTime UTCTime where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep LocalTime = PGTimestamp
 instance ShowConstant LocalTime where
-  type PGRep LocalTime = PGTimestamp
   constant = safeCoerceFromRep . pgLocalTime
 instance QueryRunnerColumnDefault LocalTime LocalTime where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep TimeOfDay = PGTime
 instance ShowConstant TimeOfDay where
-  type PGRep TimeOfDay = PGTime
   constant = safeCoerceFromRep . pgTimeOfDay
 instance QueryRunnerColumnDefault TimeOfDay TimeOfDay where
   queryRunnerColumnDefault = qrcDef
@@ -159,14 +167,14 @@ instance QueryRunnerColumnDefault TimeOfDay TimeOfDay where
 -- postgresql-simple only defines 'CI' instances for strict & lazy
 -- 'Text' so we can't do more either.
 
+type instance PGRep (CI StrictText) = PGCitext
 instance ShowConstant (CI StrictText) where
-  type PGRep (CI StrictText) = PGCitext
   constant = safeCoerceFromRep . pgCiStrictText
 instance QueryRunnerColumnDefault (CI StrictText) (CI StrictText) where
   queryRunnerColumnDefault = qrcDef
 
+type instance PGRep (CI LazyText) = PGCitext
 instance ShowConstant (CI LazyText) where
-  type PGRep (CI LazyText) = PGCitext
   constant = safeCoerceFromRep . pgCiLazyText
 instance QueryRunnerColumnDefault (CI LazyText) (CI LazyText) where
   queryRunnerColumnDefault = qrcDef

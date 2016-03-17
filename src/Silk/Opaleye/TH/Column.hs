@@ -1,4 +1,4 @@
-{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
 module Silk.Opaleye.TH.Column
   ( -- * TH end points
     mkId
@@ -34,7 +34,7 @@ import Opaleye.RunQuery (fieldQueryRunnerColumn)
 
 import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)
 import Silk.Opaleye.Conv (Conv)
-import Silk.Opaleye.ShowConstant (ShowConstant (..))
+import Silk.Opaleye.ShowConstant (PGRep, ShowConstant (..))
 
 
 -- | Given a @newtype@ declaration with no type parameters and a single
@@ -70,7 +70,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   tvars <- getTyVars tyName
   let predCond = map (classP_ (mkName "Typeable") . (:[])) tvars
   let outterTy = foldl AppT (ConT tyName) tvars
-  return $ map ($ (predCond, outterTy)) $ [fromFld, showConst, queryRunnerColumn] ++ if convInstance then [conv] else []
+  return $ map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ if convInstance then [conv] else []
   where
     fromFld (predCond, outterTy)
       = InstanceD
@@ -86,12 +86,12 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
                 []
             ]
           ]
+    pgRep (_, outterTy) = TySynInstD (''PGRep) (TySynEqn [outterTy] (ConT ''PGRep `AppT` innerTy))
     showConst (_, outterTy)
       = InstanceD
           []
           (ConT (mkName "ShowConstant") `AppT` outterTy)
-          [ TySynInstD (mkName "PGRep") (TySynEqn [outterTy] (ConT (mkName "PGRep") `AppT` innerTy))
-          , FunD (mkName "constant")
+          [ FunD (mkName "constant")
             [ Clause []
               (NormalB $ InfixE
                (Just (VarE (mkName "unsafeCoerceColumn")))
@@ -103,7 +103,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
           ]
     queryRunnerColumn (predCond, outterTy)
       = InstanceD
-          (equalP_ (ConT (mkName "PGRep") `AppT` outterTy) (VarT $ mkName "a") : predCond)
+          (equalP_ (ConT ''PGRep `AppT` outterTy) (VarT $ mkName "a") : predCond)
           (ConT (mkName "QueryRunnerColumnDefault") `AppT` outterTy `AppT` outterTy)
           [ FunD
             (mkName "queryRunnerColumnDefault")
