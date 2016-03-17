@@ -22,7 +22,7 @@ import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
 
-import Opaleye.Internal.Column (Column (Column))
+import Opaleye.Internal.Column (Column (Column), Nullable)
 import Opaleye.Internal.HaskellDB.PrimQuery (Literal (OtherLit), PrimExpr (ConstExpr))
 import Opaleye.Internal.HaskellDB.Sql.Default (defaultSqlGenerator, defaultSqlLiteral)
 import Opaleye.PGTypes
@@ -69,6 +69,8 @@ safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
 class ShowConstant a where
   constant :: a -> Column a
+
+type instance PGRep (Maybe a) = Nullable (PGRep a)
 
 type instance PGRep [a] = PGArray (PGRep a)
 instance ShowConstant a => ShowConstant [a] where
