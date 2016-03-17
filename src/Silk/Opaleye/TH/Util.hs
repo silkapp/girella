@@ -1,6 +1,5 @@
 module Silk.Opaleye.TH.Util
   ( getConNameTy
-  , ty
   , ambiguateName
   ) where
 
@@ -11,9 +10,6 @@ import Silk.Opaleye.Misc (trd3)
 
 ambiguateName :: Name -> Name
 ambiguateName (Name occ _) = Name occ NameS
-
-ty :: String -> Type
-ty = ConT . mkName
 
 getConName :: Con -> Either String Name
 getConName c = case c of

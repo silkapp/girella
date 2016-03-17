@@ -1,4 +1,7 @@
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE
+    LambdaCase
+  , TemplateHaskell
+  #-}
 module Silk.Opaleye.TH.Table
   ( -- * TH End points
     makeTypes
@@ -28,7 +31,8 @@ import Language.Haskell.TH.Syntax
 import Opaleye.Column (Column, Nullable)
 import Opaleye.Table (Table (Table))
 
-import Silk.Opaleye.TH.Util (ambiguateName, ty)
+import Silk.Opaleye.Conv (Conv)
+import Silk.Opaleye.TH.Util (ambiguateName)
 import Silk.Opaleye.Table (optionalColumn)
 import Silk.Opaleye.To (To)
 
@@ -60,7 +64,7 @@ makeType = \case
         where
           replaceNullable :: Type -> Type
           replaceNullable = transformBi $ \case
-            Name (OccName "Nullable") _ -> mkName "Maybe"
+            Name (OccName "Nullable") _ -> ''Maybe
             s -> s
 
       dataDecl = DataD [] dataName (map PlainTV tvars) [RecC recName (zipWith f tvars vtys) ] ds
@@ -70,9 +74,9 @@ makeType = \case
 
       aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) ttysO
       aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) ttysH
-      convInstance = InstanceD [] (ConT (mkName "Conv") `AppT` ConT synNameH) []
+      convInstance = InstanceD [] (ConT ''Conv `AppT` ConT synNameH) []
 
-      toInstance = TySynInstD (mkName "To")
+      toInstance = TySynInstD ''To
                      (TySynEqn [typ, lhs] rhs)
         where
           typ, lhs, rhs :: Type
@@ -92,18 +96,18 @@ makeTable tableName pName = f <=< reify
          tableSig = SigD (mkName "table") tableTy
            where
              tableTy :: Type
-             tableTy = ty "Table" `AppT` tbm `AppT` tb
+             tableTy = ConT ''Table `AppT` tbm `AppT` tb
                where
-                 tbm = ty "To" `AppT` ty "Maybe"  `AppT` tb
-                 tb  = ty "To" `AppT` ty "Column" `AppT` ConT (ambiguateName recordName)
+                 tbm = ConT ''To `AppT` ConT ''Maybe  `AppT` tb
+                 tb  = ConT ''To `AppT` ConT ''Column `AppT` ConT (ambiguateName recordName)
          table = FunD (mkName "table") [Clause [] (NormalB e) []]
            where
              e :: Exp
-             e = AppE (AppE (ConE (mkName "Table")) (LitE $ StringL tableName)) wireRec
+             e = AppE (AppE (ConE 'Table) (LitE $ StringL tableName)) wireRec
              wireRec :: Exp
              wireRec = AppE (VarE pName) (RecConE recordName $ map field vsts)
              field :: VarStrictType -> FieldExp
-             field (nm, _, _) = (nm, AppE (VarE (mkName "optionalColumn")) (LitE . StringL $ columnName nm))
+             field (nm, _, _) = (nm, AppE (VarE 'optionalColumn) (LitE . StringL $ columnName nm))
              columnName :: Name -> String
              columnName (Name (OccName occ) _) = removeApostrophes . concatMap underscore $ occ
              underscore :: Char -> String
@@ -114,10 +118,10 @@ makeTable tableName pName = f <=< reify
          -- TODO opa ConT recordName isn't valid, it just happens to be the
          -- same as the name of the type alias so ambiguateName just
          -- acts as unsafeCoerce here.
-         emptyUpdateSig = SigD (mkName "emptyUpdate") (ty "To" `AppT` ty "Maybe" `AppT` (ty "To" `AppT` ty "Column" `AppT` ConT (ambiguateName recordName)))
+         emptyUpdateSig = SigD (mkName "emptyUpdate") (ConT ''To `AppT` ConT ''Maybe `AppT` (ConT ''To `AppT` ConT ''Column `AppT` ConT (ambiguateName recordName)))
          emptyUpdateBody = FunD (mkName "emptyUpdate") [Clause [] (NormalB e) []]
            where
              e :: Exp
-             e = foldl' AppE (ConE recordName) . map (const . ConE $ mkName "Nothing") $ vsts
+             e = foldl' AppE (ConE recordName) . map (const . ConE $ 'Nothing) $ vsts
 
       _ -> error "makeTable: I need one record"

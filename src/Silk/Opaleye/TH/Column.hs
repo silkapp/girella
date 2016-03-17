@@ -1,4 +1,7 @@
-{-# LANGUAGE NoImplicitPrelude, TemplateHaskell #-}
+{-# LANGUAGE
+    NoImplicitPrelude
+  , TemplateHaskell
+  #-}
 module Silk.Opaleye.TH.Column
   ( -- * TH end points
     mkId
