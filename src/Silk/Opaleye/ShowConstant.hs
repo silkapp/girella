@@ -4,6 +4,7 @@
   , MultiParamTypeClasses
   , ScopedTypeVariables
   , TypeFamilies
+  , FlexibleContexts
   #-}
 module Silk.Opaleye.ShowConstant
   ( ShowConstant (..)
@@ -13,12 +14,16 @@ module Silk.Opaleye.ShowConstant
   ) where
 
 import Data.CaseInsensitive (CI)
+import Data.Typeable (Typeable)
 import Data.Int (Int64)
+import Data.List (intercalate)
 import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
 
-import Opaleye.Column (Column)
+import Opaleye.Internal.Column (Column (Column))
+import Opaleye.Internal.HaskellDB.PrimQuery (Literal (OtherLit), PrimExpr (ConstExpr))
+import Opaleye.Internal.HaskellDB.Sql.Default (defaultSqlGenerator, defaultSqlLiteral)
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
 
@@ -57,6 +62,21 @@ safeCoerceFromRep = unsafeCoerceColumn
 safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
 safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
+instance ShowConstant a => ShowConstant [a] where
+  type PGRep [a] = PGArray (PGRep a)
+  constant = safeCoerceFromRep . pgArray (safeCoerceToRep . constant)
+
+pgArray :: (a -> Column b) -> [a] -> Column (PGArray b)
+pgArray pgEl xs = literalColumn (OtherLit $ "ARRAY[" ++ intercalate "," (map oneEl xs) ++ "]")
+  where
+    oneEl x = case pgEl x of
+      (Column (ConstExpr lit)) -> defaultSqlLiteral defaultSqlGenerator lit
+      (Column _) -> error "pgArray: element function should always produce a constant."
+
+instance (Typeable b, QueryRunnerColumnDefault a b)
+  => QueryRunnerColumnDefault [a] [b] where
+  queryRunnerColumnDefault = queryRunnerColumn unsafeCoerceColumn id
+                               (queryRunnerColumnDefault :: QueryRunnerColumn (PGArray a) [b])
 
 instance ShowConstant StrictText where
   type PGRep StrictText = PGText
