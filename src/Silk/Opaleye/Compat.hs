@@ -18,7 +18,7 @@ import Opaleye.Column (unsafeCoerceColumn)
 import Opaleye.Order (PGOrd)
 import Opaleye.RunQuery (QueryRunnerColumnDefault (..))
 #else
-import Opaleye.Column (Column, unsafeCoerce)
+import Opaleye.Column (Column, Nullable, unsafeCoerce)
 import Opaleye.Internal.RunQuery (QueryRunnerColumnDefault (..))
 import Opaleye.PGTypes
 #endif
@@ -35,6 +35,7 @@ instance PGOrd PGInt8
 instance PGOrd PGTimestamptz
 instance PGOrd PGText
 instance PGOrd PGCitext
+instance PGOrd a => PGOrd (Nullable a)
 #endif
 
 equalP_ :: Type -> Type -> Pred
