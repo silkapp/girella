@@ -30,11 +30,20 @@ unsafeCoerceColumn = unsafeCoerce
 
 #if !MIN_VERSION_opaleye(0,4,0)
 class PGOrd a
+instance PGOrd PGBool
+instance PGOrd PGCitext
+instance PGOrd PGDate
+instance PGOrd PGFloat4
+instance PGOrd PGFloat8
+instance PGOrd PGInt2
 instance PGOrd PGInt4
 instance PGOrd PGInt8
-instance PGOrd PGTimestamptz
+instance PGOrd PGNumeric
 instance PGOrd PGText
-instance PGOrd PGCitext
+instance PGOrd PGTime
+instance PGOrd PGTimestamp
+instance PGOrd PGTimestamptz
+instance PGOrd PGUuid
 instance PGOrd a => PGOrd (Nullable a)
 #endif
 
