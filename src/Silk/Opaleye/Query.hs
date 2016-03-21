@@ -11,6 +11,7 @@ module Silk.Opaleye.Query
   , runDelete
   , runQueryInternalExplicit
   , runQueryInternal
+  , runQueryExplicit
   , runQuery
   , runQueryFirst
   , runQueryString
@@ -18,7 +19,6 @@ module Silk.Opaleye.Query
 
 import Control.Monad.Reader
 import Data.Int (Int64)
-import Data.Maybe
 import Data.Profunctor.Product.Default
 import Data.String (IsString (fromString))
 import GHC.SrcLoc
@@ -81,11 +81,13 @@ runQueryInternalExplicit
   :: ( ?loc :: CallStack
      , Transaction m
      )
-  => QueryRunner columns haskells -> Query columns -> m [haskells]
+  => QueryRunner columns haskells
+  -> Query columns
+  -> m [haskells]
 runQueryInternalExplicit qr q = liftQ $ do
   conn <- ask
   unsafeIOToTransaction . M.runQueryExplicit qr conn $ label (ppCallStack ?loc) q
-  where ppCallStack = fromMaybe "no call stack available" . fmap (showSrcLoc . snd) . lastMay . getCallStack
+  where ppCallStack = maybe "no call stack available" (showSrcLoc . snd) . lastMay . getCallStack
 
 -- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
 runQueryInternal
@@ -93,21 +95,36 @@ runQueryInternal
      , Default QueryRunner columns haskells
      , Transaction m
      )
-  => Query columns -> m [haskells]
+  => Query columns
+  -> m [haskells]
 runQueryInternal = runQueryInternalExplicit def
 
 -- | Run a query and convert the result using Conv.
-runQuery :: ( ?loc :: CallStack
-            , Default QueryRunner columns haskells
-            , Default Unpackspec columns columns
-            , haskells ~ OpaRep domain
-            , Conv domain
-            , Transaction m
-            ) => Query columns -> m [domain]
-runQuery q =
+runQueryExplicit
+  :: ( ?loc :: CallStack
+     , haskells ~ OpaRep domain
+     , Conv domain
+     , Transaction m
+     )
+  => QueryRunner columns haskells
+  -> Query columns
+  -> m [domain]
+runQueryExplicit qr q =
 -- Useful to uncomment when debugging query errors.
 -- unsafeIOToTransaction . putStrLn . showSqlForPostgres $ q
-  fmap conv . runQueryInternal $ q
+  fmap conv . runQueryInternalExplicit qr $ q
+
+-- | Run a query and convert the result using Conv.
+runQuery
+  :: ( ?loc :: CallStack
+     , Default QueryRunner columns haskells
+     , haskells ~ OpaRep domain
+     , Conv domain
+     , Transaction m
+     )
+  => Query columns
+  -> m [domain]
+runQuery = runQueryExplicit def
 
 -- | Same as 'queryConv' but only fetches the first row.
 runQueryFirst :: ( ?loc :: CallStack
