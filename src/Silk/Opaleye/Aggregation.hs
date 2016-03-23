@@ -16,8 +16,10 @@ module Silk.Opaleye.Aggregation
   , minNullable
   , boolOr
   , boolOrGrouped
+  , boolOrNullable
   , boolAnd
   , boolAndGrouped
+  , boolAndNullable
   , arrayAgg
   , arrayAggGrouped
   , stringAgg
@@ -31,14 +33,14 @@ module Silk.Opaleye.Aggregation
   ) where
 
 import Data.Int (Int64)
-import Data.Profunctor (Profunctor, dimap, rmap)
+import Data.Profunctor (Profunctor, dimap, rmap, lmap)
 
 import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column, Nullable, toNullable)
 import Opaleye.PGTypes (PGBool, PGArray, PGText)
 import qualified Opaleye.Aggregate as A
 
-import Silk.Opaleye.Compat (PGOrd)
+import Silk.Opaleye.Compat (PGOrd, unsafeCoerceColumn)
 import Silk.Opaleye.ShowConstant (PGRep, ShowConstant, safeCoerceFromRep, safeCoerceToRep)
 
 groupBy_ :: Aggregator (Column a) (Column a)
@@ -87,11 +89,17 @@ boolOrGrouped = safeCoerceAgg A.boolOr
 boolOr :: PGRep a ~ PGBool => Aggregator (Column a) (Column (Nullable a))
 boolOr = toNullable <$> boolOrGrouped
 
+boolOrNullable :: PGRep a ~ PGBool => Aggregator (Column (Nullable a)) (Column (Nullable a))
+boolOrNullable = nullableAgg boolOr
+
 boolAndGrouped :: PGRep a ~ PGBool => Aggregator (Column a) (Column a)
 boolAndGrouped = safeCoerceAgg A.boolAnd
 
 boolAnd :: PGRep a ~ PGBool => Aggregator (Column a) (Column (Nullable a))
 boolAnd = toNullable <$> boolAndGrouped
+
+boolAndNullable :: PGRep a ~ PGBool => Aggregator (Column (Nullable a)) (Column (Nullable a))
+boolAndNullable = nullableAgg boolAnd
 
 stringAggGrouped :: PGRep a ~ PGText => Column a -> Aggregator (Column a) (Column a)
 stringAggGrouped = safeCoerceAgg . A.stringAgg . safeCoerceToRep
@@ -109,3 +117,9 @@ safeCoerceAgg :: Profunctor p
   => p (Column (PGRep a)) (Column (PGRep b))
   -> p (Column        a ) (Column        b )
 safeCoerceAgg = dimap safeCoerceToRep safeCoerceFromRep
+
+nullableAgg
+  :: Profunctor p
+  => p (Column a) (Column b)
+  -> p (Column (Nullable a)) (Column b)
+nullableAgg = lmap unsafeCoerceColumn
