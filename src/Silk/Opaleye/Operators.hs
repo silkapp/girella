@@ -23,6 +23,7 @@ module Silk.Opaleye.Operators
   , ors
   , ands
   , in_
+  , case_
   , notIn
   , isNull
   , not_
@@ -35,6 +36,7 @@ module Silk.Opaleye.Operators
 
 import Prelude.Compat hiding ((.))
 
+import Control.Arrow ((***))
 import Control.Category ((.))
 
 import Opaleye.Column (toNullable, unsafeCast)
@@ -110,6 +112,9 @@ lower = safeCoerceFromRep . O.lower . safeCoerceToRep
 
 like :: PGRep a ~ PGText => Column a -> Column a -> Column Bool
 like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
+
+case_ :: ShowConstant a => [(Column Bool, Column a)] -> Column a -> Column a
+case_ xs = safeCoerceFromRep . O.case_ (map (safeCoerceToRep *** safeCoerceToRep) xs) . safeCoerceToRep
 
 -- Query helpers
 
