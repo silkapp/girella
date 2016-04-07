@@ -12,6 +12,7 @@ module Silk.Opaleye.ShowConstant
   , safeCoerceToRep
   , safeCoerceFromRep
   , safelyWrapped
+  , IsPGType (showPGType)
   ) where
 
 import Data.CaseInsensitive (CI)
@@ -22,6 +23,7 @@ import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
 import Data.UUID (UUID)
 
+import Opaleye.Column (unsafeCast)
 import Opaleye.Internal.Column (Column (Column), Nullable)
 import Opaleye.Internal.HaskellDB.PrimQuery (Literal (OtherLit), PrimExpr (ConstExpr))
 import Opaleye.Internal.HaskellDB.Sql.Default (defaultSqlGenerator, defaultSqlLiteral)
@@ -74,15 +76,17 @@ type instance PGRep (Maybe a) = Nullable (PGRep a)
 type instance PGRep (Nullable a) = Nullable (PGRep a)
 
 type instance PGRep [a] = PGArray (PGRep a)
-instance ShowConstant a => ShowConstant [a] where
+instance (ShowConstant a, IsPGType (PGRep a)) => ShowConstant [a] where
   constant = safeCoerceFromRep . pgArray (safeCoerceToRep . constant)
 
-pgArray :: (a -> Column b) -> [a] -> Column (PGArray b)
-pgArray pgEl xs = literalColumn (OtherLit $ "ARRAY[" ++ intercalate "," (map oneEl xs) ++ "]")
+pgArray :: forall a b. IsPGType b => (a -> Column b) -> [a] -> Column (PGArray b)
+pgArray pgEl xs = unsafeCast arrayTy $
+  literalColumn (OtherLit $ "ARRAY[" ++ intercalate "," (map oneEl xs) ++ "]")
   where
     oneEl x = case pgEl x of
       (Column (ConstExpr lit)) -> defaultSqlLiteral defaultSqlGenerator lit
       (Column _) -> error "pgArray: element function should always produce a constant."
+    arrayTy = showPGType ([] :: [PGArray b])
 
 instance (Typeable b, QueryRunnerColumnDefault a b)
   => QueryRunnerColumnDefault [a] [b] where
@@ -184,3 +188,40 @@ instance QueryRunnerColumnDefault (CI LazyText) (CI LazyText) where
 
 qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
 qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRunnerColumnDefault
+
+class IsPGType pgType where
+  showPGType :: proxy pgType -> String
+instance IsPGType PGBool where
+  showPGType _ = "boolean"
+instance IsPGType PGDate where
+  showPGType _ = "date"
+instance IsPGType PGFloat4 where
+  showPGType _ = "real"
+instance IsPGType PGFloat8 where
+  showPGType _ = "double precision"
+instance IsPGType PGInt8 where
+  showPGType _ = "bigint"
+instance IsPGType PGInt4 where
+  showPGType _ = "integer"
+instance IsPGType PGInt2 where
+  showPGType _ = "smallint"
+instance IsPGType PGNumeric where
+  showPGType _ = "numeric"
+instance IsPGType PGText where
+  showPGType _ = "text"
+instance IsPGType PGTime where
+  showPGType _ = "time"
+instance IsPGType PGTimestamp where
+  showPGType _ = "timestamp"
+instance IsPGType PGTimestamptz where
+  showPGType _ = "timestamp with time zone"
+instance IsPGType PGUuid where
+  showPGType _ = "uuid"
+instance IsPGType PGCitext where
+  showPGType _ =  "citext"
+instance IsPGType PGBytea where
+  showPGType _ = "bytea"
+instance IsPGType a => IsPGType (PGArray a) where
+  showPGType _ = showPGType ([] :: [a]) ++ "[]"
+instance IsPGType a => IsPGType (Nullable a) where
+  showPGType _ = showPGType ([] :: [a])
