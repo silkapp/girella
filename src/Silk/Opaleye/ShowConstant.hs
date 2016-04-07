@@ -1,10 +1,11 @@
 {-# OPTIONS -fno-warn-orphans -fno-warn-deprecations #-}
 {-# LANGUAGE
-    FlexibleInstances
+    FlexibleContexts
+  , FlexibleInstances
   , MultiParamTypeClasses
   , ScopedTypeVariables
   , TypeFamilies
-  , FlexibleContexts
+  , UndecidableInstances
   #-}
 module Silk.Opaleye.ShowConstant
   ( PGRep
@@ -12,20 +13,23 @@ module Silk.Opaleye.ShowConstant
   , safeCoerceToRep
   , safeCoerceFromRep
   , safelyWrapped
+  , emptyArray
+  , singletonArray
+  , arrayPrepend
   , IsPGType (showPGType)
   ) where
 
 import Data.CaseInsensitive (CI)
-import Data.Typeable (Typeable)
 import Data.Int (Int64)
 import Data.List (intercalate)
 import Data.String.Conversions
 import Data.Time (Day, LocalTime, TimeOfDay, UTCTime)
+import Data.Typeable (Typeable)
 import Data.UUID (UUID)
 
 import Opaleye.Column (unsafeCast)
 import Opaleye.Internal.Column (Column (Column), Nullable)
-import Opaleye.Internal.HaskellDB.PrimQuery (Literal (OtherLit), PrimExpr (ConstExpr))
+import Opaleye.Internal.HaskellDB.PrimQuery (Literal (OtherLit), PrimExpr (ConstExpr, FunExpr))
 import Opaleye.Internal.HaskellDB.Sql.Default (defaultSqlGenerator, defaultSqlLiteral)
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
@@ -78,6 +82,15 @@ type instance PGRep (Nullable a) = Nullable (PGRep a)
 type instance PGRep [a] = PGArray (PGRep a)
 instance (ShowConstant a, IsPGType (PGRep a)) => ShowConstant [a] where
   constant = safeCoerceFromRep . pgArray (safeCoerceToRep . constant)
+
+emptyArray :: IsPGType (PGRep a) => Column [a]
+emptyArray = safeCoerceFromRep $ pgArray id []
+
+arrayPrepend :: Column a -> Column [a] -> Column [a]
+arrayPrepend (Column e) (Column es) = Column (FunExpr "array_prepend" [e, es])
+
+singletonArray :: forall a. IsPGType (PGRep a) => Column a -> Column [a]
+singletonArray x = arrayPrepend x emptyArray
 
 pgArray :: forall a b. IsPGType b => (a -> Column b) -> [a] -> Column (PGArray b)
 pgArray pgEl xs = unsafeCast arrayTy $
