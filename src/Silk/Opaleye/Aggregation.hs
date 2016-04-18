@@ -33,6 +33,7 @@ module Silk.Opaleye.Aggregation
   -- * Re-exports
   , Aggregator
   , aggregate
+  , orderAggregate
   ) where
 
 import Data.Int (Int64)
@@ -41,7 +42,7 @@ import Data.Profunctor.Product (ProductProfunctor, (***!))
 import Data.Profunctor.Product.Default (Default (def))
 import qualified Data.Profunctor.Product as PP
 
-import Opaleye.Aggregate (Aggregator, aggregate)
+import Opaleye.Aggregate (Aggregator, aggregate, orderAggregate)
 import Opaleye.Column (Column, Nullable, toNullable)
 import Opaleye.PGTypes (PGArray, PGBool, PGText)
 import qualified Opaleye.Aggregate as A
