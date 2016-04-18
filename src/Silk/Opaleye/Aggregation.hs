@@ -1,5 +1,6 @@
 {-# LANGUAGE
     FlexibleContexts
+  , MultiParamTypeClasses
   , TypeFamilies
   #-}
 module Silk.Opaleye.Aggregation
@@ -25,6 +26,8 @@ module Silk.Opaleye.Aggregation
   , stringAgg
   , stringAggGrouped
   , safeCoerceAgg
+  -- * Default aggregators
+  , GroupBy (getGroupBy)
   -- * Renames
   , groupBy_
   -- * Re-exports
@@ -33,11 +36,14 @@ module Silk.Opaleye.Aggregation
   ) where
 
 import Data.Int (Int64)
-import Data.Profunctor (Profunctor, dimap, rmap, lmap)
+import Data.Profunctor (Profunctor, dimap, lmap, rmap)
+import Data.Profunctor.Product (ProductProfunctor, (***!))
+import Data.Profunctor.Product.Default (Default (def))
+import qualified Data.Profunctor.Product as PP
 
 import Opaleye.Aggregate (Aggregator, aggregate)
 import Opaleye.Column (Column, Nullable, toNullable)
-import Opaleye.PGTypes (PGBool, PGArray, PGText)
+import Opaleye.PGTypes (PGArray, PGBool, PGText)
 import qualified Opaleye.Aggregate as A
 
 import Silk.Opaleye.Compat (PGOrd, unsafeCoerceColumn)
@@ -123,3 +129,15 @@ nullableAgg
   => p (Column a) (Column b)
   -> p (Column (Nullable a)) (Column b)
 nullableAgg = lmap unsafeCoerceColumn
+
+newtype GroupBy a b = GroupBy { getGroupBy :: Aggregator a b }
+
+instance Default GroupBy (Column a) (Column a) where
+  def = GroupBy groupBy_
+
+instance Profunctor GroupBy where
+  dimap f g (GroupBy agg) = GroupBy (dimap f g agg)
+
+instance ProductProfunctor GroupBy where
+  empty = GroupBy PP.empty
+  GroupBy agg1 ***! GroupBy agg2 = GroupBy (agg1 ***! agg2)
