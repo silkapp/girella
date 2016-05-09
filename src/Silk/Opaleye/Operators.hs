@@ -24,6 +24,7 @@ module Silk.Opaleye.Operators
   , ands
   , in_
   , case_
+  , ifThenElse
   , notIn
   , isNull
   , not_
@@ -115,6 +116,9 @@ like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
 
 case_ :: ShowConstant a => [(Column Bool, Column a)] -> Column a -> Column a
 case_ xs = safeCoerceFromRep . O.case_ (map (safeCoerceToRep *** safeCoerceToRep) xs) . safeCoerceToRep
+
+ifThenElse :: Column Bool -> Column a -> Column a -> Column a
+ifThenElse = O.ifThenElse . safeCoerceToRep
 
 -- Query helpers
 
