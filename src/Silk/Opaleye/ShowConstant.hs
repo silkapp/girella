@@ -29,7 +29,7 @@ import Data.Typeable (Typeable)
 import Data.UUID (UUID)
 
 import Opaleye.Column (unsafeCast)
-import Opaleye.Internal.Column (Column (Column), Nullable)
+import Opaleye.Internal.Column (Column (Column), Nullable, PGNum (..), PGFractional (..))
 import Opaleye.Internal.HaskellDB.PrimQuery (Literal (OtherLit), PrimExpr (ConstExpr, FunExpr))
 import Opaleye.Internal.HaskellDB.Sql.Default (defaultSqlGenerator, defaultSqlLiteral)
 import Opaleye.PGTypes
@@ -135,18 +135,26 @@ instance QueryRunnerColumnDefault StrictByteString StrictByteString where
   queryRunnerColumnDefault = qrcDef
 
 type instance PGRep Int = PGInt4
+instance PGNum Int where
+  pgFromInteger = safeCoerceFromRep . pgFromInteger
 instance ShowConstant Int where
   constant = safeCoerceFromRep . pgInt4
 instance QueryRunnerColumnDefault Int Int where
   queryRunnerColumnDefault = qrcDef
 
 type instance PGRep Int64 = PGInt8
+instance PGNum Int64 where
+  pgFromInteger = safeCoerceFromRep . pgFromInteger
 instance ShowConstant Int64 where
   constant = safeCoerceFromRep . pgInt8
 instance QueryRunnerColumnDefault Int64 Int64 where
   queryRunnerColumnDefault = qrcDef
 
 type instance PGRep Double = PGFloat8
+instance PGNum Double where
+  pgFromInteger = safeCoerceFromRep . pgFromInteger
+instance PGFractional Double where
+  pgFromRational = safeCoerceFromRep . pgFromRational
 instance ShowConstant Double where
   constant = safeCoerceFromRep . pgDouble
 instance QueryRunnerColumnDefault Double Double where
