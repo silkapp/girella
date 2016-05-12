@@ -17,6 +17,8 @@ module Silk.Opaleye.Operators
   , (.>=?)
   , (.<=)
   , (.<=?)
+  , quot_
+  , rem_
   , upper
   , lower
   , like
@@ -42,8 +44,8 @@ import Control.Arrow ((***))
 import Control.Category ((.))
 
 import Opaleye.Column (toNullable, unsafeCast)
-import Opaleye.Internal.Column (Column (Column))
-import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
+import Opaleye.Internal.Column (Column (Column), binOp)
+import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr), BinOp (OpDiv, OpMod))
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
 import qualified Opaleye.Column    as C
 import qualified Opaleye.Operators as O
@@ -107,6 +109,12 @@ a .<= b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
 infix 4 .<=?
 (.<=?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
 a .<=? b = safeCoerceFromRep $ a O..<= b
+
+quot_ :: PGIntegral (PGRep a) => Column a -> Column a -> Column a
+quot_ = binOp OpDiv
+
+rem_ :: PGIntegral (PGRep a) => Column a -> Column a -> Column a
+rem_ = binOp OpMod
 
 upper :: PGRep a ~ PGText => Column a -> Column a
 upper = safeCoerceFromRep . O.upper . safeCoerceToRep
