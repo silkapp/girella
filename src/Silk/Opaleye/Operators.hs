@@ -20,6 +20,7 @@ module Silk.Opaleye.Operators
   , upper
   , lower
   , like
+  , charLength
   , ors
   , ands
   , in_
@@ -41,6 +42,8 @@ import Control.Arrow ((***))
 import Control.Category ((.))
 
 import Opaleye.Column (toNullable, unsafeCast)
+import Opaleye.Internal.Column (Column (Column))
+import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
 import qualified Opaleye.Column    as C
 import qualified Opaleye.Operators as O
@@ -113,6 +116,9 @@ lower = safeCoerceFromRep . O.lower . safeCoerceToRep
 
 like :: PGRep a ~ PGText => Column a -> Column a -> Column Bool
 like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
+
+charLength :: PGTextual (PGRep a) => Column a -> Column Int
+charLength (Column e) = Column (FunExpr "char_length" [e])
 
 case_ :: ShowConstant a => [(Column Bool, Column a)] -> Column a -> Column a
 case_ xs = safeCoerceFromRep . O.case_ (map (safeCoerceToRep *** safeCoerceToRep) xs) . safeCoerceToRep

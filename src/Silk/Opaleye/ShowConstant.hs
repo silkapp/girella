@@ -18,6 +18,7 @@ module Silk.Opaleye.ShowConstant
   , singletonArray
   , arrayPrepend
   , IsPGType (showPGType)
+  , PGTextual
   ) where
 
 import Data.CaseInsensitive (CI)
@@ -250,3 +251,7 @@ instance IsPGType a => IsPGType (PGArray a) where
   showPGType _ = showPGType ([] :: [a]) ++ "[]"
 instance IsPGType a => IsPGType (Nullable a) where
   showPGType _ = showPGType ([] :: [a])
+
+class PGTextual a
+instance PGTextual PGText
+instance PGTextual PGCitext
