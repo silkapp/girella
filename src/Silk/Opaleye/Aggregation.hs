@@ -6,9 +6,11 @@
 module Silk.Opaleye.Aggregation
   ( sum_
   , sumGrouped
+  , sumNullable
   , count
   , avg
   , avgGrouped
+  , avgNullable
   , max_
   , maxGrouped
   , maxNullable
@@ -58,6 +60,9 @@ groupBy_ = A.groupBy
 sumGrouped :: ShowConstant a => Aggregator (Column a) (Column a)
 sumGrouped = safeCoerceAgg A.sum
 
+sumNullable :: ShowConstant a => Aggregator (Column (Nullable a)) (Column (Nullable a))
+sumNullable = A.sum
+
 sum_ :: ShowConstant a => Aggregator (Column a) (Column (Nullable a))
 sum_ = toNullable <$> sumGrouped
 
@@ -68,6 +73,9 @@ count = rmap safeCoerceFromRep A.count
 -- http://www.postgresql.org/docs/9.4/static/functions-aggregate.html
 avgGrouped :: Aggregator (Column Double) (Column Double)
 avgGrouped = safeCoerceAgg A.avg
+
+avgNullable :: Aggregator (Column (Nullable Double)) (Column (Nullable Double))
+avgNullable = dimap unsafeCoerceColumn unsafeCoerceColumn A.avg
 
 avg :: Aggregator (Column Double) (Column (Nullable Double))
 avg = toNullable <$> avgGrouped
