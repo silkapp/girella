@@ -66,7 +66,7 @@ sumNullable = A.sum
 sum_ :: ShowConstant a => Aggregator (Column a) (Column (Nullable a))
 sum_ = toNullable <$> sumGrouped
 
-count :: ShowConstant a => Aggregator (Column a) (Column Int64)
+count :: Aggregator (Column a) (Column Int64)
 count = rmap safeCoerceFromRep A.count
 
 -- TODO Expand to numeric input (even integral)
