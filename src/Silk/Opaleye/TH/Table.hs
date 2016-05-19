@@ -50,7 +50,8 @@ makeType = \case
       appendToName :: Name -> String -> Name
       appendToName (Name (OccName occ) ns) s = OccName (occ ++ s) `Name` ns
       tvars :: [Name]
-      tvars = map (mkName . (:[])) $ take (length vtys) ['a'..'z']
+      tvars = map mkName . take (length vtys) $ tyvarNames
+      tyvarNames = [ x:(show i) | i <- [0..], x <- ['a'..'z'] ] -- a0, b0, ..., a1, b1, ...
       ttys :: [Type]
       ttys = map (\(_,_,tp) -> tp) vtys
       ttysO :: [Type]
