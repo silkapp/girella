@@ -16,6 +16,7 @@ module Silk.Opaleye
   , unsafeCoerceColumn
   , QueryRunnerColumnDefault (queryRunnerColumnDefault)
   , FromField (fromField)
+  , module Opaleye.Distinct
 
   -- * Opaleye.Column re-exports
   , matchNullable
@@ -42,6 +43,7 @@ import Data.Profunctor (lmap)
 import Database.PostgreSQL.Simple.FromField (FromField (fromField))
 
 import Opaleye.Column (matchNullable, toNullable)
+import Opaleye.Distinct (distinct)
 import Opaleye.PGTypes
 import Opaleye.QueryArr (Query, QueryArr)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
