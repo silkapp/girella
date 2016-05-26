@@ -43,7 +43,7 @@ import Data.Profunctor (lmap)
 import Database.PostgreSQL.Simple.FromField (FromField (fromField))
 
 import Opaleye.Column (matchNullable, toNullable)
-import Opaleye.Distinct (distinct)
+import Opaleye.Distinct (distinct, distinctExplicit)
 import Opaleye.PGTypes
 import Opaleye.QueryArr (Query, QueryArr)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
