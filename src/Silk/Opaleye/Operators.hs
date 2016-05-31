@@ -34,7 +34,7 @@ module Silk.Opaleye.Operators
   , null_
   , nullable
   , maybeToNullable
-  , fromNullable
+  , C.fromNullable
   , unsafeCast
   ) where
 
@@ -173,9 +173,7 @@ nullable :: ShowConstant a => a -> Column (Nullable a)
 nullable = toNullable . constant
 
 -- | Convert a 'Maybe' into a 'Column'.
+-- TODO: this doesn't match the opaleye semantics, which is confusing.
+-- But we already use it in many places.
 maybeToNullable :: ShowConstant a => Maybe a -> Column (Nullable a)
 maybeToNullable = maybe null_ nullable
-
--- | 'fromMaybe' for 'Column'.
-fromNullable :: ShowConstant a => a -> Column (Nullable a) -> Column a
-fromNullable = C.fromNullable . constant
