@@ -19,6 +19,7 @@ module Silk.Opaleye.Operators
   , (.<=?)
   , quot_
   , rem_
+  , trunc
   , upper
   , lower
   , like
@@ -44,7 +45,7 @@ import Control.Arrow ((***))
 import Control.Category ((.))
 
 import Opaleye.Column (toNullable, unsafeCast)
-import Opaleye.Internal.Column (Column (Column), binOp)
+import Opaleye.Internal.Column (Column (Column), PGFractional, binOp)
 import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr), BinOp (OpDiv, OpMod))
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
 import qualified Opaleye.Column    as C
@@ -127,6 +128,9 @@ like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
 
 charLength :: PGTextual (PGRep a) => Column a -> Column Int
 charLength (Column e) = Column (FunExpr "char_length" [e])
+
+trunc :: PGFractional (PGRep a) => Column a -> Column Int
+trunc (Column e) = Column (FunExpr "trunc" [e])
 
 case_ :: ShowConstant a => [(Column Bool, Column a)] -> Column a -> Column a
 case_ xs = safeCoerceFromRep . O.case_ (map (safeCoerceToRep *** safeCoerceToRep) xs) . safeCoerceToRep
