@@ -9,6 +9,10 @@ module Silk.Opaleye.Combinators
   , innerJoinOn
   , leftJoin
   , leftJoinExplicit
+  , rightJoin
+  , rightJoinExplicit
+  , fullJoin
+  , fullJoinExplicit
   -- * Re-exports
   , restrict
   ) where
@@ -62,6 +66,27 @@ leftJoinExplicit
   -> Query (columnsA, nullableColumnsB)
 leftJoinExplicit unA unB nulB a b f = J.leftJoinExplicit unA unB nulB a b (safeCoerceToRep . f)
 
+rightJoinExplicit
+  :: Unpackspec columnsA columnsA
+  -> Unpackspec columnsB columnsB
+  -> NullMaker columnsA nullableColumnsA
+  -> Query columnsA
+  -> Query columnsB
+  -> ((columnsA, columnsB) -> Column Bool)
+  -> Query (nullableColumnsA, columnsB)
+rightJoinExplicit unA unB nulA a b f = J.rightJoinExplicit unA unB nulA a b (safeCoerceToRep . f)
+
+fullJoinExplicit
+  :: Unpackspec columnsA columnsA
+  -> Unpackspec columnsB columnsB
+  -> NullMaker columnsA nullableColumnsA
+  -> NullMaker columnsB nullableColumnsB
+  -> Query columnsA
+  -> Query columnsB
+  -> ((columnsA, columnsB) -> Column Bool)
+  -> Query (nullableColumnsA, nullableColumnsB)
+fullJoinExplicit unA unB nulA nulB a b f = J.fullJoinExplicit unA unB nulA nulB a b (safeCoerceToRep . f)
+
 leftJoin ::
   ( Default Unpackspec columnsA columnsA
   , Default Unpackspec columnsB columnsB
@@ -72,6 +97,29 @@ leftJoin ::
   -> ((columnsA, columnsB) -> Column Bool)
   -> Query (columnsA, nullableColumnsB)
 leftJoin = leftJoinExplicit def def def
+
+rightJoin ::
+  ( Default Unpackspec columnsA columnsA
+  , Default Unpackspec columnsB columnsB
+  , Default NullMaker columnsA nullableColumnsA
+  )
+  => Query columnsA
+  -> Query columnsB
+  -> ((columnsA, columnsB) -> Column Bool)
+  -> Query (nullableColumnsA, columnsB)
+rightJoin = rightJoinExplicit def def def
+
+fullJoin ::
+  ( Default Unpackspec columnsA columnsA
+  , Default Unpackspec columnsB columnsB
+  , Default NullMaker columnsA nullableColumnsA
+  , Default NullMaker columnsB nullableColumnsB
+  )
+  => Query columnsA
+  -> Query columnsB
+  -> ((columnsA, columnsB) -> Column Bool)
+  -> Query (nullableColumnsA, nullableColumnsB)
+fullJoin = fullJoinExplicit def def def def
 
 -- | Opaleye's 'restrict' over a 'Bool'.
 restrict :: QueryArr (Column Bool) ()
