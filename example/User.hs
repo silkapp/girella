@@ -103,7 +103,7 @@ makeTable "people" 'pUser ''UserP
 
 -- | The simplest query, @select * from users@
 --
--- This query can be reused by lal queries referencing the users
+-- This query can be reused by all queries referencing the users
 -- table. By convention we only allow one call to `queryTable` per
 -- table to make it clear who /owns/ the schema.
 --
