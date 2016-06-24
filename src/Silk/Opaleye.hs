@@ -16,6 +16,7 @@ module Silk.Opaleye
   , unsafeCoerceColumn
   , QueryRunnerColumnDefault (queryRunnerColumnDefault)
   , FromField (fromField)
+  , module Opaleye.Binary
   , module Opaleye.Distinct
 
   -- * Opaleye.Column re-exports
@@ -42,6 +43,7 @@ import Data.Int (Int64)
 import Data.Profunctor (lmap)
 import Database.PostgreSQL.Simple.FromField (FromField (fromField))
 
+import Opaleye.Binary (unionAll, unionAllExplicit)
 import Opaleye.Column (matchNullable, toNullable)
 import Opaleye.Distinct (distinct, distinctExplicit)
 import Opaleye.PGTypes
