@@ -44,16 +44,15 @@ import Prelude.Compat hiding ((.))
 import Control.Arrow ((***))
 import Control.Category ((.))
 
-import Opaleye.Column (toNullable, unsafeCast)
+import Opaleye.Column (Nullable, toNullable, unsafeCast)
 import Opaleye.Internal.Column (Column (Column), PGFractional)
 import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
-import qualified Opaleye.Column    as C
+import qualified Opaleye.Column    as C (fromNullable, isNull, null)
 import qualified Opaleye.Operators as O
 
-import Silk.Opaleye.Compat (PGOrd)
-import Silk.Opaleye.ShowConstant
-import Silk.Opaleye.TH
+import Silk.Opaleye.Compat (PGIntegral, PGOrd, PGString)
+import Silk.Opaleye.ShowConstant (ShowConstant (constant), PGRep, safeCoerceFromRep, safeCoerceToRep)
 
 infix 4 .==
 -- | Equality between columns, does not allow comparison on Nullable
@@ -128,7 +127,7 @@ lower = safeCoerceFromRep . O.lower . safeCoerceToRep
 like :: PGRep a ~ PGText => Column a -> Column a -> Column Bool
 like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
 
-charLength :: PGTextual (PGRep a) => Column a -> Column Int
+charLength :: PGString (PGRep a) => Column a -> Column Int
 charLength (Column e) = Column (FunExpr "char_length" [e])
 
 trunc :: PGFractional (PGRep a) => Column a -> Column Int

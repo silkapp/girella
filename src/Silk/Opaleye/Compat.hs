@@ -4,6 +4,7 @@ module Silk.Opaleye.Compat
   , QueryRunnerColumnDefault (..)
   , PGOrd
   , PGIntegral
+  , PGString
   -- * template-haskell
   , VarBangType
   , equalP_
@@ -35,7 +36,7 @@ import Data.Foldable (foldl')
 #endif
 
 #if MIN_VERSION_opaleye(0,5,0)
-import Opaleye.Internal.Column (PGIntegral)
+import Opaleye.Internal.Column (PGIntegral, PGString)
 #endif
 
 #if MIN_VERSION_opaleye(0,4,0)
@@ -77,6 +78,10 @@ class PGIntegral a
 instance PGIntegral PGInt2
 instance PGIntegral PGInt4
 instance PGIntegral PGInt8
+
+class PGString a
+instance PGString PGText
+instance PGString PGCitext
 #endif
 
 equalP_ :: Type -> Type -> Pred

@@ -18,7 +18,7 @@ module Silk.Opaleye.ShowConstant
   , singletonArray
   , arrayPrepend
   , IsSqlType (showPGType)
-  , PGTextual
+  , PGString
   , PGIntegral
   ) where
 
@@ -34,7 +34,7 @@ import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
 
-import Silk.Opaleye.Compat (PGIntegral, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+import Silk.Opaleye.Compat (PGIntegral, PGString, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 
 -- | A type that can be serialized and used in the database. 'PGRep'
 -- gives the opaleye type and 'constant' converts a value to a
@@ -203,7 +203,3 @@ instance QueryRunnerColumnDefault (CI LazyText) (CI LazyText) where
 
 qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
 qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRunnerColumnDefault
-
-class PGTextual a
-instance PGTextual PGText
-instance PGTextual PGCitext
