@@ -82,8 +82,8 @@ textToGender = \case
   _        -> Nothing
 
 
--- | The 'makeId' call is a more specific version of
--- 'makeColumnInstances' that supports any column-to-value
+-- | The 'mkColumnInstances' call is a more general version of
+-- 'mkId' that supports any column-to-value
 -- mapping. For Gender this generates:
 --
 -- > instance FromField Gender

@@ -56,6 +56,7 @@ doThings :: (MonadPool m, MonadIO m) => m ()
 doThings = do
   i <- liftIO UUID.nextRandom
   people <- runTransaction $ myTransaction i
+  liftIO $ print ()
   liftIO $ print people
 
 -- | A 'Transaction' form just that, a database Transaction. Note that
@@ -66,6 +67,8 @@ doThings = do
 myTransaction :: Transaction m => UUID -> m [User.UserH]
 myTransaction i = do
   User.insert i "Aaron Aardvark" 12 (Just User.Male)
+  void $ User.update "Aaron Aardvark" 13
+  void $ User.updateEasy "Aaron Aardvark" 20
   runQuery User.allByName
 
 -- | The Transformer stack, we need to stuff a Config somewhere in

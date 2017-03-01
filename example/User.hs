@@ -23,6 +23,7 @@ module User
   , allByName
   , insert
   , update
+  , updateEasy
   -- * Ordering
   , nameOrder
   -- Running queries
@@ -160,15 +161,27 @@ insert i n a mg =
       , gender = Just $ maybeToNullable mg
       }
 
-update :: Transaction m => Text -> Int -> Maybe Gender -> m Bool
-update n a mg = (> 0) <$> runUpdate table upd condition
+update :: Transaction m => Text -> Int -> m Bool
+update n a = (> 0) <$> runUpdate table upd condition
   where
     upd :: To Column User -> To Maybe (To Column User)
     upd p = p
       { id'    = Just $ id' p
       , name   = Just $ name p
       , age    = Just $ constant a
-      , gender = Just $ maybeToNullable mg
+      , gender = Just $ gender p
+      }
+    condition :: To Column User -> Column Bool
+    condition p = name p .== constant n
+
+updateEasy :: Transaction m => Text -> Int -> m Bool
+updateEasy n a = (> 0) <$> runUpdateEasy table upd condition
+  where
+    upd :: To Column User -> To Column User
+    upd p = p
+      { id'    = id' p
+      , name   = name p
+      , age    = constant a
       }
     condition :: To Column User -> Column Bool
     condition p = name p .== constant n

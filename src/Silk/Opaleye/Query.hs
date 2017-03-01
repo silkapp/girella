@@ -7,6 +7,7 @@ module Silk.Opaleye.Query
   ( runInsert
   , runInsertReturning
   , runUpdate
+  , runUpdateEasy
   , runUpdateConst
   , runDelete
   , runQueryInternalExplicit
@@ -30,11 +31,11 @@ import Safe
 import qualified Database.PostgreSQL.Simple as PG
 
 import Opaleye.Label (label)
-import Opaleye.Manipulation (Unpackspec)
+import Opaleye.Manipulation (Unpackspec, Updater)
 import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
 import Opaleye.Table
-import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
+import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate, runUpdateEasy)
 import qualified Opaleye.RunQuery     as M (runQueryExplicit, runQueryFoldExplicit)
 
 import Silk.Opaleye.Compat (prettySrcLoc)
@@ -74,6 +75,19 @@ runUpdate tab upd cond = liftQ $ do
 -- | Update without using the current values
 runUpdateConst :: Transaction m => Table columnsW columnsR -> columnsW -> (columnsR -> Column Bool) -> m Int64
 runUpdateConst tab = runUpdate tab . const
+
+-- | runUpdateEasy inside a Transaction
+runUpdateEasy
+  :: ( Transaction m
+     , Default Updater columnsR columnsW
+     )
+  => Table columnsW columnsR
+  -> (columnsR -> columnsR)
+  -> (columnsR -> Column Bool)
+  -> m Int64
+runUpdateEasy tab upd cond = liftQ $ do
+  conn <- ask
+  unsafeIOToTransaction $ M.runUpdateEasy conn tab upd (safeCoerceToRep . cond)
 
 runDelete :: Transaction m => Table a columnsR -> (columnsR -> Column Bool) -> m Int64
 runDelete tab cond = liftQ $ do
