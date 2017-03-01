@@ -34,7 +34,7 @@ import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
 
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+import Silk.Opaleye.Compat (PGIntegral, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 
 -- | A type that can be serialized and used in the database. 'PGRep'
 -- gives the opaleye type and 'constant' converts a value to a
@@ -207,8 +207,3 @@ qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRun
 class PGTextual a
 instance PGTextual PGText
 instance PGTextual PGCitext
-
-class PGIntegral a
-instance PGIntegral PGInt2
-instance PGIntegral PGInt4
-instance PGIntegral PGInt8

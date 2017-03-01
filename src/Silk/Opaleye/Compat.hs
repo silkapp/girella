@@ -3,6 +3,7 @@ module Silk.Opaleye.Compat
   ( unsafeCoerceColumn
   , QueryRunnerColumnDefault (..)
   , PGOrd
+  , PGIntegral
   -- * template-haskell
   , VarBangType
   , equalP_
@@ -31,6 +32,10 @@ import GHC.SrcLoc (SrcLoc, showSrcLoc)
 
 #if MIN_VERSION_template_haskell(2,10,0)
 import Data.Foldable (foldl')
+#endif
+
+#if MIN_VERSION_opaleye(0,5,0)
+import Opaleye.Internal.Column (PGIntegral)
 #endif
 
 #if MIN_VERSION_opaleye(0,4,0)
@@ -65,6 +70,13 @@ instance PGOrd PGTimestamp
 instance PGOrd PGTimestamptz
 instance PGOrd PGUuid
 instance PGOrd a => PGOrd (Nullable a)
+#endif
+
+#if !MIN_VERSION_opaleye(0,5,0)
+class PGIntegral a
+instance PGIntegral PGInt2
+instance PGIntegral PGInt4
+instance PGIntegral PGInt8
 #endif
 
 equalP_ :: Type -> Type -> Pred
