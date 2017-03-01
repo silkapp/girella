@@ -62,7 +62,7 @@ defaultPool connectInfo = createPool (PG.connect connectInfo) PG.close 10 5 10
 
 -- | Default beforeTransaction hook, does nothing.
 defaultBeforeTransaction :: IO ()
-defaultBeforeTransaction = return ()
+defaultBeforeTransaction = pure ()
 
 -- | Default onRetry hook, prints a warning.
 defaultOnRetry :: Exception e => e -> a -> IO ()
@@ -70,7 +70,7 @@ defaultOnRetry e _ = warningM "silk-db-opaleye" $ "Exception during database act
 
 -- | Default afterTransaction hook, does nothing.
 defaultAfterTransaction :: a -> IO ()
-defaultAfterTransaction = const (return ())
+defaultAfterTransaction = const $ pure ()
 
 -- A function to update all the callbacks at once.
 setCallbacks :: IO a -> (forall e. Exception e => e -> a -> IO ()) -> (a -> IO ()) -> Config b -> Config a

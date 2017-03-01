@@ -50,7 +50,7 @@ makeType = \case
 #else
   DataD [] origTypeName [] [RecC recConName vtys] deriv ->
 #endif
-    return [dataDecl, aliasO, aliasH, toInstance, convInstance]
+    pure [dataDecl, aliasO, aliasH, toInstance, convInstance]
     where
       dataName = (`appendToName` "P") $ ambiguateName origTypeName
       recName = ambiguateName recConName
@@ -60,7 +60,7 @@ makeType = \case
       appendToName (Name (OccName occ) ns) s = OccName (occ ++ s) `Name` ns
       tvars :: [Name]
       tvars = map mkName . take (length vtys) $ tyvarNames
-      tyvarNames = [ x:(show i) | i <- [(0::Int)..], x <- ['a'..'z'] ] -- a0, b0, ..., a1, b1, ...
+      tyvarNames = [ x : show i | i <- [(0::Int)..], x <- ['a'..'z'] ] -- a0, b0, ..., a1, b1, ...
       ttys :: [Type]
       ttys = map (\(_,_,tp) -> tp) vtys
       ttysO :: [Type]
@@ -111,7 +111,7 @@ makeTable tableName pName = f <=< reify
     f :: Info -> Q [Dec]
     f = \case
       TyConI (dataDView -> Just ([], _dataName, _tvb, [RecC recordName vsts])) ->
-        return [tableSig, table, emptyUpdateSig, emptyUpdateBody]
+        pure [tableSig, table, emptyUpdateSig, emptyUpdateBody]
         where
          tableSig = SigD (mkName "table") tableTy
            where

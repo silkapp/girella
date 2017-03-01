@@ -27,4 +27,4 @@ getConNameTy :: Con -> Either String (Name, [Type])
 getConNameTy c = do
   nm <- getConName c
   t  <- getConTy c
-  return (nm,t)
+  pure (nm,t)

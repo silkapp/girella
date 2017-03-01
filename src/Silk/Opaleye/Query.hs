@@ -63,7 +63,7 @@ runInsertReturning
   -> m [domain]
 runInsertReturning tab ins ret = liftQ $ do
   conn <- ask
-  fmap conv $ unsafeIOToTransaction $ M.runInsertReturning conn tab ins ret
+  fmap conv . unsafeIOToTransaction $ M.runInsertReturning conn tab ins ret
 
 -- | runUpdate inside a Transaction
 runUpdate :: Transaction m => Table columnsW columnsR -> (columnsR -> columnsW) -> (columnsR -> Column Bool) -> m Int64
@@ -165,10 +165,10 @@ runQueryExplicit
   => QueryRunner columns haskells
   -> Query columns
   -> m [domain]
-runQueryExplicit qr q =
+runQueryExplicit qr {- q -} =
 -- Useful to uncomment when debugging query errors.
 -- unsafeIOToTransaction . putStrLn . showSqlForPostgres $ q
-  fmap conv . runQueryInternalExplicit qr $ q
+  fmap conv . runQueryInternalExplicit qr
 
 -- | Run a query and convert the result using Conv.
 runQuery

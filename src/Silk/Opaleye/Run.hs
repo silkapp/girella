@@ -1,10 +1,6 @@
 -- | Import this module if you only want to run queries
-module Silk.Opaleye.Run
-  ( module Silk.Opaleye.Config
-  , module Silk.Opaleye.Transaction
-  , module Silk.Opaleye.Range
-  ) where
+module Silk.Opaleye.Run (module X) where
 
-import Silk.Opaleye.Config
-import Silk.Opaleye.Range
-import Silk.Opaleye.Transaction
+import Silk.Opaleye.Config as X
+import Silk.Opaleye.Range as X
+import Silk.Opaleye.Transaction as X

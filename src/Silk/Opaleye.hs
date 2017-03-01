@@ -65,3 +65,5 @@ import Silk.Opaleye.ShowConstant
 import Silk.Opaleye.TH
 import Silk.Opaleye.To
 import Silk.Opaleye.Transaction
+
+{-# ANN module "HLint: ignore Use import/export shortcut" #-}

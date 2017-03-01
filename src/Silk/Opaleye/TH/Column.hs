@@ -35,16 +35,16 @@ import Silk.Opaleye.ShowConstant (PGRep, ShowConstant (..))
 -- we generate all the instances a column type needs in a more magic way
 -- than calling 'makeColumnInstances' manually.
 mkId :: Name -> Q [Dec]
-mkId = return . either error id <=< f <=< reify
+mkId = pure . either error id <=< f <=< reify
   where
     f :: Info -> Q (Either String [Dec])
     f i = case i of
       TyConI (newtypeDView -> Just (tyName, con, _)) ->
         case con of
           RecC conName [(desName , _ , innerTy)] -> Right <$> g tyName conName innerTy desName
-          _ -> return $ Left "Must be a newtype without type parameters and a single destructor record field"
-      TyConI NewtypeD{} -> return $ Left "Type variables aren't allowed"
-      _                 -> return $ Left "Must be a newtype"
+          _ -> pure $ Left "Must be a newtype without type parameters and a single destructor record field"
+      TyConI NewtypeD{} -> pure $ Left "Type variables aren't allowed"
+      _                 -> pure $ Left "Must be a newtype"
 
     g :: Name -> Name -> Type -> Name -> Q [Dec]
     g tyName conName innerTy desName = makeColumnInstancesInternal tyName innerTy desName (Left conName) True
@@ -60,7 +60,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   tvars <- getTyVars tyName
   let predCond = map (classP_ (''Typeable) . (:[])) tvars
   let outterTy = foldl AppT (ConT tyName) tvars
-  return $ map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ if convInstance then [conv] else []
+  pure . map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ [conv | convInstance]
   where
     fromFld :: ([Pred], Type) -> Dec
     fromFld (predCond, outterTy)
@@ -109,7 +109,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
 getTyVars :: Name -> Q [Type]
 getTyVars n = do
   info <- reify n
-  return . map varToType $ case info of
+  pure . map varToType $ case info of
     TyConI (dataDView -> Just (_, _, tvars, _)) -> tvars
     TyConI (newtypeDView -> Just (_, _, tvars)) -> tvars
     TyConI (TySynD _ tvars _ ) -> tvars
@@ -123,5 +123,5 @@ fromFieldTotal fromDb f mdata = fromDb <$> fromField f mdata
 
 fromFieldAux :: (FromField a, Typeable b) => (a -> Maybe b) -> Field -> Maybe StrictByteString -> Conversion b
 fromFieldAux fromDb f mdata = case mdata of
-  Just dat -> maybe (returnError ConversionFailed f (cs dat)) return . fromDb =<< fromField f mdata
+  Just dat -> maybe (returnError ConversionFailed f (cs dat)) pure . fromDb =<< fromField f mdata
   Nothing  -> returnError UnexpectedNull f ""

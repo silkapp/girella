@@ -117,7 +117,7 @@ newtypeDView (NewtypeD _preds tyName tys _mkind con _preds') =
   Just (tyName, con, tys)
 #else
 newtypeDView (NewtypeD _preds tyName tys con _names) =
-  Just $ (tyName, con, tys)
+  Just (tyName, con, tys)
 #endif
 newtypeDView _ = Nothing
 

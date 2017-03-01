@@ -124,10 +124,10 @@ defaultRunTransaction mc t = liftIO . run t =<< mc
     run q cfg = do
       c <- beforeTransaction cfg
       res <- withRetry c 1
-        $ withResource (connectionPool cfg)
+        . withResource (connectionPool cfg)
         $ \conn -> PG.withTransaction conn . flip runReaderT conn . unQ $ q
       afterTransaction cfg c
-      return res
+      pure res
       where
         withRetry :: c -> Int -> IO a -> IO a
         withRetry c n act = act `catchRecoverableExceptions` handler c n act
