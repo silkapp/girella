@@ -25,8 +25,8 @@ import Control.Monad.Reader
 import Data.Int (Int64)
 import Data.Profunctor.Product.Default
 import Data.String (IsString (fromString))
-import GHC.SrcLoc
-import GHC.Stack
+import GHC.Stack (prettySrcLoc)
+import GHC.Stack.Types
 import Safe
 import qualified Database.PostgreSQL.Simple as PG
 
@@ -36,7 +36,7 @@ import Opaleye.QueryArr
 import Opaleye.RunQuery (QueryRunner)
 import Opaleye.Table
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
-import qualified Opaleye.RunQuery     as M (runQueryExplicit, foldQueryExplicit)
+import qualified Opaleye.RunQuery     as M (runQueryExplicit, runQueryFoldExplicit)
 
 import Silk.Opaleye.Conv
 import Silk.Opaleye.ShowConstant
@@ -103,7 +103,7 @@ foldQueryInternalExplicit
   -> m a
 foldQueryInternalExplicit qr q e f = liftQ $ do
   conn <- ask
-  unsafeIOToTransaction $ M.foldQueryExplicit qr conn (label (ppCallStack ?loc) q) e f
+  unsafeIOToTransaction $ M.runQueryFoldExplicit qr conn (label (ppCallStack ?loc) q) e f
 
 foldQueryInternal
   :: ( ?loc :: CallStack
@@ -143,7 +143,7 @@ foldQuery
 foldQuery = foldQueryExplicit def
 
 ppCallStack :: CallStack -> String
-ppCallStack = maybe "no call stack available" (showSrcLoc . snd) . lastMay . getCallStack
+ppCallStack = maybe "no call stack available" (prettySrcLoc . snd) . lastMay . getCallStack
 
 -- | Opaleye's runQuery inside a Transaction, does not use 'Conv'
 runQueryInternal

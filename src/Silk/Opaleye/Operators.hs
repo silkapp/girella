@@ -46,10 +46,12 @@ import Control.Category ((.))
 
 import Opaleye.Column (toNullable, unsafeCast)
 import Opaleye.Internal.Column (Column (Column), PGFractional, binOp)
-import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr), BinOp (OpDiv, OpMod))
+import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
-import qualified Opaleye.Column    as C
-import qualified Opaleye.Operators as O
+import qualified Opaleye.Column                       as C
+import qualified Opaleye.Internal.Column              as C
+import qualified Opaleye.Internal.HaskellDB.PrimQuery as HPQ
+import qualified Opaleye.Operators                    as O
 
 import Silk.Opaleye.Compat (PGOrd)
 import Silk.Opaleye.ShowConstant
@@ -84,7 +86,7 @@ infix 4 .>
 a .> b = safeCoerceFromRep $ safeCoerceToRep a O..> safeCoerceToRep b
 
 infix 4 .>?
-(.>?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
+(.>?) ::(PGOrd (PGRep a), PGOrd a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
 a .>? b = safeCoerceFromRep $ a O..> b
 
 infix 4 .<
@@ -92,7 +94,7 @@ infix 4 .<
 a .< b = safeCoerceFromRep $ safeCoerceToRep a O..< safeCoerceToRep b
 
 infix 4 .<?
-(.<?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
+(.<?) :: (PGOrd (PGRep a), PGOrd a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
 a .<? b = safeCoerceFromRep $ a O..< b
 
 infix 4 .>=
@@ -100,7 +102,7 @@ infix 4 .>=
 a .>= b = safeCoerceFromRep $ safeCoerceToRep a O..>= safeCoerceToRep b
 
 infix 4 .>=?
-(.>=?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
+(.>=?) :: (PGOrd (PGRep a), PGOrd a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
 a .>=? b = safeCoerceFromRep $ a O..>= b
 
 infix 4 .<=
@@ -108,14 +110,14 @@ infix 4 .<=
 a .<= b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
 
 infix 4 .<=?
-(.<=?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
+(.<=?) :: (PGOrd (PGRep a), PGOrd a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
 a .<=? b = safeCoerceFromRep $ a O..<= b
 
 quot_ :: PGIntegral (PGRep a) => Column a -> Column a -> Column a
-quot_ = binOp OpDiv
+quot_ = C.binOp (HPQ.:/)
 
 rem_ :: PGIntegral (PGRep a) => Column a -> Column a -> Column a
-rem_ = binOp OpMod
+rem_ = binOp HPQ.OpMod
 
 upper :: PGRep a ~ PGText => Column a -> Column a
 upper = safeCoerceFromRep . O.upper . safeCoerceToRep

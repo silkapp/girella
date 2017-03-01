@@ -41,7 +41,7 @@ makeTypes = (fmap concat . mapM makeType =<<)
 
 makeType :: Dec -> Q [Dec]
 makeType = \case
-  DataD [] origTypeName [] [RecC recConName vtys] ds -> return [dataDecl, aliasO, aliasH, toInstance, convInstance]
+  DataD [] origTypeName [] _ [RecC recConName vtys] ctx -> return [dataDecl, aliasO, aliasH, toInstance, convInstance]
     where
       dataName = (`appendToName` "P") $ ambiguateName origTypeName
       recName = ambiguateName recConName
@@ -68,14 +68,18 @@ makeType = \case
             Name (OccName "Nullable") _ -> ''Maybe
             s -> s
 
-      dataDecl = DataD [] dataName (map PlainTV tvars) [RecC recName (zipWith f tvars vtys) ] ds
+      dataDecl :: Dec
+      dataDecl = DataD [] dataName (map PlainTV tvars) Nothing [RecC recName (zipWith f tvars vtys) ] ctx
         where
           f :: Name -> VarStrictType -> VarStrictType
           f c (n,s,_) = (ambiguateName n, s, VarT c)
 
       aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) ttysO
       aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) ttysH
-      convInstance = InstanceD [] (ConT ''Conv `AppT` ConT synNameH) []
+      convInstance :: Dec
+      convInstance = InstanceD overlap [] (ConT ''Conv `AppT` ConT synNameH) []
+      overlap :: Maybe Overlap
+      overlap = Nothing
 
       toInstance = TySynInstD ''To
                      (TySynEqn [typ, lhs] rhs)
@@ -92,7 +96,7 @@ makeTable tableName pName = f <=< reify
   where
     f :: Info -> Q [Dec]
     f = \case
-      TyConI (DataD [] _dataName _tvb [RecC recordName vsts] _deriv) -> return [tableSig, table, emptyUpdateSig, emptyUpdateBody]
+      TyConI (DataD [] _dataName _tvb _mk [RecC recordName vsts] _deriv) -> return [tableSig, table, emptyUpdateSig, emptyUpdateBody]
         where
          tableSig = SigD (mkName "table") tableTy
            where

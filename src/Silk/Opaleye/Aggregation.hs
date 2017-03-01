@@ -35,7 +35,7 @@ module Silk.Opaleye.Aggregation
   -- * Re-exports
   , Aggregator
   , aggregate
-  , orderAggregate
+  , aggregateOrdered
   ) where
 
 import Data.Int (Int64)
@@ -44,7 +44,7 @@ import Data.Profunctor.Product (ProductProfunctor, (***!))
 import Data.Profunctor.Product.Default (Default (def))
 import qualified Data.Profunctor.Product as PP
 
-import Opaleye.Aggregate (Aggregator, aggregate, orderAggregate)
+import Opaleye.Aggregate (Aggregator, aggregate, aggregateOrdered)
 import Opaleye.Column (Column, Nullable, toNullable)
 import Opaleye.PGTypes (PGArray, PGBool, PGText)
 import qualified Opaleye.Aggregate as A
@@ -86,7 +86,7 @@ maxGrouped = safeCoerceAgg A.max
 max_ :: PGOrd (PGRep a) => Aggregator (Column a) (Column (Nullable a))
 max_ = toNullable <$> maxGrouped
 
-maxNullable :: PGOrd (PGRep a) => Aggregator (Column (Nullable a)) (Column (Nullable a))
+maxNullable :: (PGOrd (PGRep a), PGOrd a) => Aggregator (Column (Nullable a)) (Column (Nullable a))
 maxNullable = A.max
 
 minGrouped :: PGOrd (PGRep a) => Aggregator (Column a) (Column a)
@@ -95,7 +95,7 @@ minGrouped = safeCoerceAgg A.min
 min_ :: PGOrd (PGRep a) => Aggregator (Column a) (Column (Nullable a))
 min_ = toNullable <$> minGrouped
 
-minNullable :: PGOrd (PGRep a) => Aggregator (Column (Nullable a)) (Column (Nullable a))
+minNullable :: (PGOrd (PGRep a), PGOrd a) => Aggregator (Column (Nullable a)) (Column (Nullable a))
 minNullable = A.min
 
 boolOrGrouped :: PGRep a ~ PGBool => Aggregator (Column a) (Column a)

@@ -18,6 +18,7 @@ module Silk.Opaleye.Misc
   , showSql
   ) where
 
+import Data.Maybe (fromMaybe)
 import Data.Int (Int64)
 import Data.Profunctor.Product.Default
 import Data.String.Conversions
@@ -31,7 +32,7 @@ import qualified Data.List as L (sum)
 
 -- | Turn a Query into a String, for debugging
 showSql :: Default Unpackspec columns columns => Query columns -> String
-showSql = showSqlForPostgres
+showSql = fromMaybe "Query will return no rows" . showSqlForPostgres
 
 flatten3 :: ((a, b), c) -> (a, b, c)
 flatten3 ((x, y), z) = (x, y, z)

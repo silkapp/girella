@@ -39,7 +39,7 @@ mkId = return . either error id <=< f <=< reify
   where
     f :: Info -> Q (Either String [Dec])
     f i = case i of
-      TyConI (NewtypeD _ctx tyName _tyVars@[] con _names) ->
+      TyConI (NewtypeD _ctx tyName _tyVars@[] _mkind con _names) ->
         case con of
           RecC conName [(desName , _ , innerTy)] -> Right <$> g tyName conName innerTy desName
           _ -> return $ Left "Must be a newtype without type parameters and a single destructor record field"
@@ -62,8 +62,10 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   let outterTy = foldl AppT (ConT tyName) tvars
   return $ map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ if convInstance then [conv] else []
   where
+    fromFld :: ([Pred], Type) -> Dec
     fromFld (predCond, outterTy)
       = InstanceD
+          (Nothing :: Maybe Overlap)
           predCond
           (ConT ''FromField `AppT` outterTy)
           [ FunD 'fromField
@@ -76,9 +78,12 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
                 []
             ]
           ]
+    pgRep :: ([Pred], Type) -> Dec
     pgRep (_, outterTy) = TySynInstD (''PGRep) (TySynEqn [outterTy] (ConT ''PGRep `AppT` innerTy))
+    showConst :: ([Pred], Type) -> Dec
     showConst (_, outterTy)
       = InstanceD
+          (Nothing :: Maybe Overlap)
           []
           (ConT ''ShowConstant `AppT` outterTy)
           [ FunD 'constant
@@ -91,22 +96,25 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
               []
             ]
           ]
+    queryRunnerColumn :: ([Pred], Type) -> Dec
     queryRunnerColumn (predCond, outterTy)
       = InstanceD
+          (Nothing :: Maybe Overlap)
           (equalP_ (ConT ''PGRep `AppT` outterTy) (VarT $ mkName "a") : predCond)
           (ConT ''QueryRunnerColumnDefault `AppT` outterTy `AppT` outterTy)
           [ FunD
             'queryRunnerColumnDefault
             [ Clause [] (NormalB $ VarE 'fieldQueryRunnerColumn) [] ]
           ]
-    conv (_, outerTy) = InstanceD [] (ConT ''Conv `AppT` outerTy) []
+    conv :: ([Pred], Type) -> Dec
+    conv (_, outerTy) = InstanceD (Nothing :: Maybe Overlap) [] (ConT ''Conv `AppT` outerTy) []
 
 getTyVars :: Name -> Q [Type]
 getTyVars n = do
   info <- reify n
   return . map varToType $ case info of
-    TyConI (DataD    _ _ tvars _ _) -> tvars
-    TyConI (NewtypeD _ _ tvars _ _) -> tvars
+    TyConI (DataD    _ _ tvars _ _ _) -> tvars
+    TyConI (NewtypeD _ _ tvars _ _ _) -> tvars
     TyConI (TySynD   _   tvars _  ) -> tvars
     _                               -> []
   where

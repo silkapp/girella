@@ -23,16 +23,16 @@ executable example
     User
     User.Columns
   build-depends:
-      base >= 4.6 && < 4.9
-    , base-compat >= 0.8.2 && < 0.10
-    , hslogger >= 1.2 && < 1.3
-    , mtl >= 2.0 && < 2.3
-    , mtl-compat >= 0.1 && < 0.3
+      base >= 4.6
+    , base-compat
+    , hslogger
+    , mtl
+    , mtl-compat
     , silk-db-opaleye
     , text == 1.2.*
-    , transformers >= 0.3 && < 0.5
-    , transformers-compat >= 0.3 && < 0.5
-    , uuid == 1.3.*
+    , transformers
+    , transformers-compat
+    , uuid
 
 library
   default-language:  Haskell2010
@@ -63,7 +63,7 @@ library
     Silk.Opaleye.Transaction.Q
     Silk.Opaleye.TH.Util
   build-depends:
-      base >= 4.6 && < 4.9
+      base >= 4.6 && < 4.10
     , aeson-utils >= 0.2 && < 0.4
     , base-compat >= 0.8.2 && < 0.10
     , case-insensitive == 1.2.*
@@ -71,16 +71,16 @@ library
     , hslogger >= 1.1 && < 1.3
     , mtl >= 2.0 && < 2.3
     , mtl-compat >= 0.1 && < 0.3
-    , opaleye >= 0.3.1 && < 0.4
+    , opaleye >= 0.5 && < 0.6
     , postgresql-simple >= 0.4.8 && < 0.6
-    , product-profunctors >= 0.5 && < 0.8
+    , product-profunctors >= 0.5 && < 0.9
     , profunctors >= 4.2 && < 5.3
     , resource-pool == 0.2.*
     , safe == 0.3.*
     , string-conversions > 0.3 && < 0.5
-    , template-haskell >= 2.9 && < 2.11
-    , time >= 1.4 && < 1.6
-    , transformers >= 0.3 && < 0.5
-    , transformers-compat >= 0.3 && < 0.5
+    , template-haskell >= 2.9 && < 2.12
+    , time >= 1.4 && < 1.7
+    , transformers >= 0.3 && < 0.6
+    , transformers-compat >= 0.3 && < 0.6
     , uniplate == 1.6.*
     , uuid == 1.3.*
