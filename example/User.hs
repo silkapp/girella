@@ -39,7 +39,6 @@ import Prelude.Compat hiding (id, (.))
 
 import Control.Category
 import Data.Text (Text)
-import Data.UUID
 
 import Silk.Opaleye
 import Silk.Opaleye.TH
@@ -149,49 +148,49 @@ allByName = orderBy nameOrder queryAll
 runById :: Transaction m => Id -> m (Maybe UserH)
 runById = runQueryFirst . byId
 
-insert :: Transaction m => UUID -> Text -> Int -> Maybe Gender -> m ()
+insert :: Transaction m => Id -> Text -> Int -> Maybe Gender -> m ()
 insert i n a mg =
   runInsert table psn
   where
     psn :: To Maybe (To Column User)
     psn = User
-      { id'    = Just $ constant (Id i)
+      { id'    = Just $ constant i
       , name   = Just $ constant n
       , age    = Just $ constant a
       , gender = Just $ maybeToNullable mg
       }
 
-update :: Transaction m => Text -> Int -> m Bool
-update n a = (> 0) <$> runUpdate table upd condition
+update :: Transaction m => Id -> Text -> Int -> m Bool
+update i n a = (> 0) <$> runUpdate table upd condition
   where
     upd :: To Column User -> To Maybe (To Column User)
     upd p = p
       { id'    = Just $ id' p
-      , name   = Just $ name p
+      , name   = Just $ constant n
       , age    = Just $ constant a
       , gender = Just $ gender p
       }
     condition :: To Column User -> Column Bool
-    condition p = name p .== constant n
+    condition p = id' p .== constant i
 
-updateEasy :: Transaction m => Text -> Int -> m Bool
-updateEasy n a = (> 0) <$> runUpdateEasy table upd condition
+updateEasy :: Transaction m => Id -> Text -> Int -> m Bool
+updateEasy i n a = (> 0) <$> runUpdateEasy table upd condition
   where
     upd :: To Column User -> To Column User
     upd p = p
       { id'    = id' p
-      , name   = name p
+      , name   = constant n
       , age    = constant a
       }
     condition :: To Column User -> Column Bool
-    condition p = name p .== constant n
+    condition p = id' p .== constant i
 
 -- Type sig can be generalized to Conv as above.
-insertAndSelectAll :: Transaction m => UUID -> Text -> Int -> Maybe Gender -> m [UserH]
+insertAndSelectAll :: Transaction m => Id -> Text -> Int -> Maybe Gender -> m [UserH]
 insertAndSelectAll i n a mg = do
   insert i n a mg
   runQuery queryAll
 
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
-runInsertAndSelectAll :: MonadPool m => UUID -> Text -> Int -> Maybe Gender -> m [UserH]
+runInsertAndSelectAll :: MonadPool m => Id -> Text -> Int -> Maybe Gender -> m [UserH]
 runInsertAndSelectAll i n a mg = runTransaction $ insertAndSelectAll i n a mg

@@ -10,7 +10,6 @@ module Main (main) where
 import Prelude.Compat
 
 import Control.Monad.Reader
-import Data.UUID
 import qualified Data.UUID.V4 as UUID (nextRandom)
 
 import Silk.Opaleye
@@ -54,21 +53,20 @@ runInReaderT = flip runReaderT
 -- run separately.
 doThings :: (MonadPool m, MonadIO m) => m ()
 doThings = do
-  i <- liftIO UUID.nextRandom
+  i <- User.Id <$> liftIO UUID.nextRandom
   people <- runTransaction $ myTransaction i
-  liftIO $ print ()
   liftIO $ print people
 
 -- | A 'Transaction' form just that, a database Transaction. Note that
 -- we don't run the transaction here, which is why you can combine
--- multiple transactions into one.
+-- multiple transations into one.
 --
 -- By combining these queries here we prevent them from running in isolation of each other.
-myTransaction :: Transaction m => UUID -> m [User.UserH]
+myTransaction :: Transaction m => User.Id -> m [User.UserH]
 myTransaction i = do
   User.insert i "Aaron Aardvark" 12 (Just User.Male)
-  void $ User.update "Aaron Aardvark" 13
-  void $ User.updateEasy "Aaron Aardvark" 20
+  void $ User.update i "Baron Bardvark" 13
+  void $ User.updateEasy i "Baron Bardvark" 20
   runQuery User.allByName
 
 -- | The Transformer stack, we need to stuff a Config somewhere in
