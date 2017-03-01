@@ -1,6 +1,8 @@
 {-# LANGUAGE
-    LambdaCase
+    CPP
+  , LambdaCase
   , TemplateHaskell
+  , ViewPatterns
   #-}
 module Silk.Opaleye.TH.Table
   ( -- * TH End points
@@ -27,10 +29,12 @@ import Data.Profunctor (dimap)
 import Data.Profunctor.Product (ProductProfunctor, p0, p1, p10, p11, p12, p13, p14, p15, p16, p2,
                                 p3, p4, p5, p6, p7, p8, p9)
 import Data.Profunctor.Product.TH (makeAdaptorAndInstance)
+import Language.Haskell.TH
 import Language.Haskell.TH.Syntax
 import Opaleye.Column (Column, Nullable)
 import Opaleye.Table (Table (Table))
 
+import Silk.Opaleye.Compat (instanceD_, dataDView)
 import Silk.Opaleye.Conv (Conv)
 import Silk.Opaleye.TH.Util (ambiguateName)
 import Silk.Opaleye.Table (optionalColumn)
@@ -41,7 +45,12 @@ makeTypes = (fmap concat . mapM makeType =<<)
 
 makeType :: Dec -> Q [Dec]
 makeType = \case
-  DataD [] origTypeName [] _ [RecC recConName vtys] ctx -> return [dataDecl, aliasO, aliasH, toInstance, convInstance]
+#if MIN_VERSION_template_haskell(2,11,0)
+  DataD [] origTypeName [] mkind [RecC recConName vtys] deriv ->
+#else
+  DataD [] origTypeName [] [RecC recConName vtys] deriv ->
+#endif
+    return [dataDecl, aliasO, aliasH, toInstance, convInstance]
     where
       dataName = (`appendToName` "P") $ ambiguateName origTypeName
       recName = ambiguateName recConName
@@ -69,17 +78,22 @@ makeType = \case
             s -> s
 
       dataDecl :: Dec
-      dataDecl = DataD [] dataName (map PlainTV tvars) Nothing [RecC recName (zipWith f tvars vtys) ] ctx
+      dataDecl =
+#if MIN_VERSION_template_haskell(2,11,0)
+        DataD [] dataName plainTVs mkind recc deriv
+#else
+        DataD [] dataName plainTVs recc deriv
+#endif
         where
+          plainTVs = map PlainTV tvars
+          recc = [RecC recName (zipWith f tvars vtys)]
           f :: Name -> VarStrictType -> VarStrictType
           f c (n,s,_) = (ambiguateName n, s, VarT c)
 
       aliasO = TySynD synNameO [] $ foldl' AppT (ConT dataName) ttysO
       aliasH = TySynD synNameH [] $ foldl' AppT (ConT dataName) ttysH
       convInstance :: Dec
-      convInstance = InstanceD overlap [] (ConT ''Conv `AppT` ConT synNameH) []
-      overlap :: Maybe Overlap
-      overlap = Nothing
+      convInstance = instanceD_ [] (ConT ''Conv `AppT` ConT synNameH) []
 
       toInstance = TySynInstD ''To
                      (TySynEqn [typ, lhs] rhs)
@@ -96,7 +110,8 @@ makeTable tableName pName = f <=< reify
   where
     f :: Info -> Q [Dec]
     f = \case
-      TyConI (DataD [] _dataName _tvb _mk [RecC recordName vsts] _deriv) -> return [tableSig, table, emptyUpdateSig, emptyUpdateBody]
+      TyConI (dataDView -> Just ([], _dataName, _tvb, [RecC recordName vsts])) ->
+        return [tableSig, table, emptyUpdateSig, emptyUpdateBody]
         where
          tableSig = SigD (mkName "table") tableTy
            where

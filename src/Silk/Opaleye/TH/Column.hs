@@ -1,6 +1,7 @@
 {-# LANGUAGE
     NoImplicitPrelude
   , TemplateHaskell
+  , ViewPatterns
   #-}
 module Silk.Opaleye.TH.Column
   ( -- * TH end points
@@ -17,12 +18,11 @@ import Prelude.Compat
 import Control.Monad ((<=<))
 import Data.Data (Typeable)
 import Data.String.Conversions (StrictByteString, cs)
-import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..),
-                                             returnError)
+import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..), returnError)
 import Language.Haskell.TH
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
 
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, equalP_, unsafeCoerceColumn)
+import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, dataDView, equalP_, instanceD_, newtypeDView, unsafeCoerceColumn)
 import Silk.Opaleye.Conv (Conv)
 import Silk.Opaleye.ShowConstant (PGRep, ShowConstant (..))
 
@@ -39,7 +39,7 @@ mkId = return . either error id <=< f <=< reify
   where
     f :: Info -> Q (Either String [Dec])
     f i = case i of
-      TyConI (NewtypeD _ctx tyName _tyVars@[] _mkind con _names) ->
+      TyConI (newtypeDView -> Just (tyName, con, _)) ->
         case con of
           RecC conName [(desName , _ , innerTy)] -> Right <$> g tyName conName innerTy desName
           _ -> return $ Left "Must be a newtype without type parameters and a single destructor record field"
@@ -64,8 +64,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   where
     fromFld :: ([Pred], Type) -> Dec
     fromFld (predCond, outterTy)
-      = InstanceD
-          (Nothing :: Maybe Overlap)
+      = instanceD_
           predCond
           (ConT ''FromField `AppT` outterTy)
           [ FunD 'fromField
@@ -82,8 +81,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
     pgRep (_, outterTy) = TySynInstD (''PGRep) (TySynEqn [outterTy] (ConT ''PGRep `AppT` innerTy))
     showConst :: ([Pred], Type) -> Dec
     showConst (_, outterTy)
-      = InstanceD
-          (Nothing :: Maybe Overlap)
+      = instanceD_
           []
           (ConT ''ShowConstant `AppT` outterTy)
           [ FunD 'constant
@@ -98,8 +96,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
           ]
     queryRunnerColumn :: ([Pred], Type) -> Dec
     queryRunnerColumn (predCond, outterTy)
-      = InstanceD
-          (Nothing :: Maybe Overlap)
+      = instanceD_
           (equalP_ (ConT ''PGRep `AppT` outterTy) (VarT $ mkName "a") : predCond)
           (ConT ''QueryRunnerColumnDefault `AppT` outterTy `AppT` outterTy)
           [ FunD
@@ -107,15 +104,15 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
             [ Clause [] (NormalB $ VarE 'fieldQueryRunnerColumn) [] ]
           ]
     conv :: ([Pred], Type) -> Dec
-    conv (_, outerTy) = InstanceD (Nothing :: Maybe Overlap) [] (ConT ''Conv `AppT` outerTy) []
+    conv (_, outerTy) = instanceD_ [] (ConT ''Conv `AppT` outerTy) []
 
 getTyVars :: Name -> Q [Type]
 getTyVars n = do
   info <- reify n
   return . map varToType $ case info of
-    TyConI (DataD    _ _ tvars _ _ _) -> tvars
-    TyConI (NewtypeD _ _ tvars _ _ _) -> tvars
-    TyConI (TySynD   _   tvars _  ) -> tvars
+    TyConI (dataDView -> Just (_, _, tvars, _)) -> tvars
+    TyConI (newtypeDView -> Just (_, _, tvars)) -> tvars
+    TyConI (TySynD _ tvars _ ) -> tvars
     _                               -> []
   where
     varToType (PlainTV nv)    = VarT nv

@@ -25,8 +25,7 @@ import Control.Monad.Reader
 import Data.Int (Int64)
 import Data.Profunctor.Product.Default
 import Data.String (IsString (fromString))
-import GHC.Stack (prettySrcLoc)
-import GHC.Stack.Types
+import GHC.Stack (CallStack, getCallStack)
 import Safe
 import qualified Database.PostgreSQL.Simple as PG
 
@@ -38,6 +37,7 @@ import Opaleye.Table
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate)
 import qualified Opaleye.RunQuery     as M (runQueryExplicit, runQueryFoldExplicit)
 
+import Silk.Opaleye.Compat (prettySrcLoc)
 import Silk.Opaleye.Conv
 import Silk.Opaleye.ShowConstant
 import Silk.Opaleye.TH

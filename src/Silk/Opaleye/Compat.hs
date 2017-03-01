@@ -3,11 +3,31 @@ module Silk.Opaleye.Compat
   ( unsafeCoerceColumn
   , QueryRunnerColumnDefault (..)
   , PGOrd
+  -- * template-haskell
+  , VarBangType
   , equalP_
   , classP_
+  , instanceD_
+  , newtypeDView
+  , dataDView
+  -- * base: call stacks
+  , SrcLoc
+  , prettySrcLoc
   ) where
 
-import Language.Haskell.TH
+import Language.Haskell.TH (Con, Cxt, Dec (DataD, InstanceD, NewtypeD), Name, Pred, TyVarBndr, Type (ConT, EqualityT, AppT))
+
+#if MIN_VERSION_template_haskell(2,11,0)
+import Language.Haskell.TH.Syntax (VarBangType)
+#else
+import Language.Haskell.TH.Syntax (VarStrictType)
+#endif
+
+#if MIN_VERSION_base(4,9,0)
+import GHC.Stack (SrcLoc, prettySrcLoc)
+#else
+import GHC.SrcLoc (SrcLoc, showSrcLoc)
+#endif
 
 #if MIN_VERSION_template_haskell(2,10,0)
 import Data.Foldable (foldl')
@@ -59,4 +79,42 @@ classP_ :: Name -> [Type] -> Pred
 classP_ = foldl' AppT . ConT
 #else
 classP_ = ClassP
+#endif
+
+instanceD_ :: Cxt -> Type -> [Dec] -> Dec
+#if MIN_VERSION_template_haskell(2,11,0)
+instanceD_ =
+  InstanceD Nothing
+#else
+instanceD_ =
+  InstanceD
+#endif
+
+#if !MIN_VERSION_template_haskell(2,11,0)
+type VarBangType = VarStrictType
+#endif
+
+newtypeDView :: Dec -> Maybe (Name, Con, [TyVarBndr])
+#if MIN_VERSION_template_haskell(2,11,0)
+newtypeDView (NewtypeD _preds tyName tys _mkind con _preds') =
+  Just (tyName, con, tys)
+#else
+newtypeDView (NewtypeD _preds tyName tys con _names) =
+  Just $ (tyName, con, tys)
+#endif
+newtypeDView _ = Nothing
+
+dataDView :: Dec -> Maybe (Cxt, Name, [TyVarBndr], [Con])
+#if MIN_VERSION_template_haskell(2,11,0)
+dataDView (DataD ctx name tys _mkind cons _ctx) =
+  Just (ctx, name, tys, cons)
+#else
+dataDView (DataD ctx name tys cons _names) =
+  Just (ctx, name, tys, cons)
+#endif
+dataDView _ = Nothing
+
+#if !MIN_VERSION_base(4,9,0)
+prettySrcLoc :: SrcLoc -> String
+prettySrcLoc = showSrcLoc
 #endif
