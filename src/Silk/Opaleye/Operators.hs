@@ -44,7 +44,7 @@ import Prelude.Compat hiding ((.))
 import Control.Arrow ((***))
 import Control.Category ((.))
 
-import Opaleye.Column (Nullable, toNullable, unsafeCast)
+import Opaleye.Column (Column, Nullable, toNullable, unsafeCast)
 import Opaleye.Internal.Column (Column (Column), PGFractional)
 import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes (PGBool, PGText, pgBool)
@@ -128,8 +128,9 @@ like :: PGRep a ~ PGText => Column a -> Column a -> Column Bool
 like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
 
 charLength :: PGString (PGRep a) => Column a -> Column Int
-charLength (Column e) = Column (FunExpr "char_length" [e])
+charLength = O.charLength . safeCoerceToRep
 
+-- TODO: Add to opaleye
 trunc :: PGFractional (PGRep a) => Column a -> Column Int
 trunc (Column e) = Column (FunExpr "trunc" [e])
 
