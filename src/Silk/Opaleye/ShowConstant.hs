@@ -60,24 +60,34 @@ import Silk.Opaleye.Compat (PGIntegral, PGString, QueryRunnerColumnDefault (..),
 type family PGRep a :: *
 
 -- | It's always safe to coerce to the underlying representation.
-safeCoerceToRep :: PGRep a ~ b => Column a -> Column b
+-- See 'safeCoerce' regarding safety.
+--
+-- Here "safe" refers to the ability to convert a type to its representation, it can never fail.
+safeCoerceToRep :: Column a -> Column (PGRep a)
 safeCoerceToRep = unsafeCoerceColumn
 
 -- | It's always safe to coerce from the underlying representation.
-safeCoerceFromRep :: PGRep a ~ b => Column b -> Column a
+--
+-- Here "safe" refers to the ability to get a value of a type from its representation.
+-- This can never cause a query to fail but if a smart constructor or other invariants are in place converting to haskell types may fail.
+safeCoerceFromRep :: Column (PGRep a) -> Column a
 safeCoerceFromRep = unsafeCoerceColumn
 
 -- | Perform a db operation on the underlying type.
+-- See 'safeCoerceToRep' and 'safeCoerceFromRep' regarding safety.
 safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
 safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
--- | Convert between two types that have the same representation.
+-- | Convert between two types having the same representation.
+-- See 'safeCoerceToRep' and 'safeCoerceFromRep' regarding safety.
 safeCoerce :: PGRep a ~ PGRep b => Column a -> Column b
 safeCoerce = safelyWrapped id
 
+-- | Apply the operator to the rep of two operands.
+-- See 'safeCoerceToRep' and 'safeCoerceFromRep' regarding safety.
 safeCoerceBinOp
-  :: (Column (PGRep a) -> Column (PGRep b) -> Column (PGRep c))
-  -> (Column a -> Column b -> Column c)
+  :: (Column (PGRep a) -> Column (PGRep a) -> Column (PGRep b))
+  -> (Column a -> Column a -> Column b)
 safeCoerceBinOp op a b = safeCoerceFromRep $ safeCoerceToRep a `op` safeCoerceToRep b
 
 -- | A class for Haskell values that can be converted to postgres
@@ -208,5 +218,5 @@ instance ShowConstant (CI LazyText) where
 instance QueryRunnerColumnDefault (CI LazyText) (CI LazyText) where
   queryRunnerColumnDefault = qrcDef
 
-qrcDef :: forall a b c . (PGRep a ~ b, QueryRunnerColumnDefault b c) => QueryRunnerColumn a c
-qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column b) id queryRunnerColumnDefault
+qrcDef :: forall a c . (QueryRunnerColumnDefault (PGRep a) c) => QueryRunnerColumn a c
+qrcDef = queryRunnerColumn (safeCoerceToRep :: Column a -> Column (PGRep a)) id queryRunnerColumnDefault
