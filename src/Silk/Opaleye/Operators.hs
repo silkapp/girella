@@ -52,7 +52,7 @@ import qualified Opaleye.Column    as C (fromNullable, isNull, null)
 import qualified Opaleye.Operators as O
 
 import Silk.Opaleye.Compat (PGIntegral, PGOrd, PGString)
-import Silk.Opaleye.ShowConstant (ShowConstant (constant), PGRep, safeCoerceFromRep, safeCoerceToRep)
+import Silk.Opaleye.ShowConstant (ShowConstant (constant), PGRep, safeCoerceBinOp, safeCoerceFromRep, safeCoerceToRep, safelyWrapped)
 
 infix 4 .==
 -- | Equality between columns, does not allow comparison on Nullable
@@ -72,60 +72,60 @@ a ./= b = safeCoerceFromRep $ a O../= b
 
 infixr 2 .||
 (.||) :: PGRep a ~ PGBool => Column a -> Column a -> Column a
-a .|| b = safeCoerceFromRep $ safeCoerceToRep a O..|| safeCoerceToRep b
+(.||) = safeCoerceBinOp (O..||)
 
 infixr 3 .&&
 (.&&) :: PGRep a ~ PGBool => Column a -> Column a -> Column a
-a .&& b = safeCoerceFromRep $ safeCoerceToRep a O..&& safeCoerceToRep b
+(.&&) = safeCoerceBinOp (O..&&)
 
 infix 4 .>
 (.>) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
-a .> b = safeCoerceFromRep $ safeCoerceToRep a O..> safeCoerceToRep b
+(.>) = safeCoerceBinOp (O..>)
 
 infix 4 .>?
 (.>?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
-a .>? b = safeCoerceFromRep $ safeCoerceToRep a O..> safeCoerceToRep b
+(.>?) = safeCoerceBinOp (O..>)
 
 infix 4 .<
 (.<) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
-a .< b = safeCoerceFromRep $ safeCoerceToRep a O..< safeCoerceToRep b
+(.<) = safeCoerceBinOp (O..<)
 
 infix 4 .<?
 (.<?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
-a .<? b = safeCoerceFromRep $ safeCoerceToRep a O..< safeCoerceToRep b
+(.<?) = safeCoerceBinOp (O..<)
 
 infix 4 .>=
 (.>=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
-a .>= b = safeCoerceFromRep $ safeCoerceToRep a O..>= safeCoerceToRep b
+(.>=) = safeCoerceBinOp (O..>=)
 
 infix 4 .>=?
 (.>=?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
-a .>=? b = safeCoerceFromRep $ safeCoerceToRep a O..>= safeCoerceToRep b
+(.>=?) = safeCoerceBinOp (O..>=)
 
 infix 4 .<=
 (.<=) :: PGOrd (PGRep a) => Column a -> Column a -> Column Bool
-a .<= b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
+(.<=) = safeCoerceBinOp (O..<=)
 
 infix 4 .<=?
 (.<=?) :: PGOrd (PGRep a) => Column (Nullable a) -> Column (Nullable a) -> Column Bool
-a .<=? b = safeCoerceFromRep $ safeCoerceToRep a O..<= safeCoerceToRep b
+(.<=?) = safeCoerceBinOp (O..<=)
 
 quot_ :: PGIntegral (PGRep a) => Column a -> Column a -> Column a
-quot_ a b = safeCoerceFromRep $ safeCoerceToRep a `O.quot_` safeCoerceToRep b
+quot_ = safeCoerceBinOp O.quot_
 
 rem_ :: PGIntegral (PGRep a) => Column a -> Column a -> Column a
-rem_ a b = safeCoerceFromRep $ safeCoerceToRep a `O.rem_` safeCoerceToRep b
+rem_ = safeCoerceBinOp O.rem_
 
 -- These
 
 upper :: PGRep a ~ PGText => Column a -> Column a
-upper = safeCoerceFromRep . O.upper . safeCoerceToRep
+upper = safelyWrapped O.upper
 
 lower :: PGRep a ~ PGText => Column a -> Column a
-lower = safeCoerceFromRep . O.lower . safeCoerceToRep
+lower = safelyWrapped O.lower
 
 like :: PGRep a ~ PGText => Column a -> Column a -> Column Bool
-like a = safeCoerceFromRep . O.like (safeCoerceToRep a) . safeCoerceToRep
+like = safelyWrapped . O.like . safeCoerceToRep
 
 charLength :: PGString (PGRep a) => Column a -> Column Int
 charLength = O.charLength . safeCoerceToRep
@@ -135,7 +135,7 @@ trunc :: PGFractional (PGRep a) => Column a -> Column Int
 trunc (Column e) = Column (FunExpr "trunc" [e])
 
 case_ :: ShowConstant a => [(Column Bool, Column a)] -> Column a -> Column a
-case_ xs = safeCoerceFromRep . O.case_ (map (safeCoerceToRep *** safeCoerceToRep) xs) . safeCoerceToRep
+case_ = safelyWrapped . O.case_ . map (safeCoerceToRep *** safeCoerceToRep)
 
 ifThenElse :: Column Bool -> Column a -> Column a -> Column a
 ifThenElse = O.ifThenElse . safeCoerceToRep
@@ -166,7 +166,7 @@ isNull = safeCoerceFromRep . C.isNull
 
 -- | Boolean negation.
 not_ :: PGRep a ~ PGBool => Column a -> Column a
-not_ = safeCoerceFromRep . O.not . safeCoerceToRep
+not_ = safelyWrapped O.not
 
 -- | 'Nothing' for 'Column's.
 null_ :: Column (Nullable a)

@@ -14,6 +14,7 @@ module Silk.Opaleye.ShowConstant
   , safeCoerceFromRep
   , safelyWrapped
   , safeCoerce
+  , safeCoerceBinOp
   , emptyArray
   , singletonArray
   , arrayPrepend
@@ -66,12 +67,18 @@ safeCoerceToRep = unsafeCoerceColumn
 safeCoerceFromRep :: PGRep a ~ b => Column b -> Column a
 safeCoerceFromRep = unsafeCoerceColumn
 
--- Perform a db operation on the underlying type.
+-- | Perform a db operation on the underlying type.
 safelyWrapped :: (Column (PGRep a) -> Column (PGRep b)) -> Column a -> Column b
 safelyWrapped f = safeCoerceFromRep . f . safeCoerceToRep
 
+-- | Convert between two types that have the same representation.
 safeCoerce :: PGRep a ~ PGRep b => Column a -> Column b
 safeCoerce = safelyWrapped id
+
+safeCoerceBinOp
+  :: (Column (PGRep a) -> Column (PGRep b) -> Column (PGRep c))
+  -> (Column a -> Column b -> Column c)
+safeCoerceBinOp op a b = safeCoerceFromRep $ safeCoerceToRep a `op` safeCoerceToRep b
 
 -- | A class for Haskell values that can be converted to postgres
 -- literal constants.
