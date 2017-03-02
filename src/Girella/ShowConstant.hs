@@ -7,7 +7,7 @@
   , TypeFamilies
   , UndecidableInstances
   #-}
-module Silk.Opaleye.ShowConstant
+module Girella.ShowConstant
   ( PGRep
   , ShowConstant (..)
   , safeCoerceToRep
@@ -35,7 +35,7 @@ import Opaleye.Internal.HaskellDB.PrimQuery (PrimExpr (FunExpr))
 import Opaleye.PGTypes
 import Opaleye.RunQuery (QueryRunnerColumn, queryRunnerColumn)
 
-import Silk.Opaleye.Compat (PGIntegral, PGString, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
+import Girella.Compat (PGIntegral, PGString, QueryRunnerColumnDefault (..), unsafeCoerceColumn)
 
 -- | A type that can be serialized and used in the database. 'PGRep'
 -- gives the opaleye type and 'constant' converts a value to a

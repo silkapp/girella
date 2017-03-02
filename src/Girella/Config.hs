@@ -1,5 +1,5 @@
 {-# LANGUAGE Rank2Types #-}
-module Silk.Opaleye.Config
+module Girella.Config
   ( Config
   , Config_
   , Connection
@@ -66,7 +66,7 @@ defaultBeforeTransaction = pure ()
 
 -- | Default onRetry hook, prints a warning.
 defaultOnRetry :: Exception e => e -> a -> IO ()
-defaultOnRetry e _ = warningM "silk-db-opaleye" $ "Exception during database action, retrying: " ++ show e
+defaultOnRetry e _ = warningM "girella" $ "Exception during database action, retrying: " ++ show e
 
 -- | Default afterTransaction hook, does nothing.
 defaultAfterTransaction :: a -> IO ()

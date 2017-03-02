@@ -1,4 +1,4 @@
-module Silk.Opaleye.Range
+module Girella.Range
   ( Range
   , mrange
   , range
@@ -34,9 +34,9 @@ import Opaleye.Column (Column)
 import Opaleye.QueryArr
 import qualified Opaleye.Order as O
 
-import Silk.Opaleye.Combinators
-import Silk.Opaleye.Operators
-import Silk.Opaleye.ShowConstant
+import Girella.Combinators
+import Girella.Operators
+import Girella.ShowConstant
 
 type Range = (Offset, Limit)
 

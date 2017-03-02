@@ -1,4 +1,4 @@
-module Silk.Opaleye
+module Girella
   ( module Control.Arrow
   , Contravariant (..)
   , Int64
@@ -23,18 +23,18 @@ module Silk.Opaleye
   , matchNullable
   , toNullable
 
-  , module Silk.Opaleye.Aggregation
-  , module Silk.Opaleye.Combinators
-  , module Silk.Opaleye.Config
-  , module Silk.Opaleye.Conv
-  , module Silk.Opaleye.Misc
-  , module Silk.Opaleye.Operators
-  , module Silk.Opaleye.Order
-  , module Silk.Opaleye.Query
-  , module Silk.Opaleye.Range
-  , module Silk.Opaleye.ShowConstant
-  , module Silk.Opaleye.To
-  , module Silk.Opaleye.Transaction
+  , module Girella.Aggregation
+  , module Girella.Combinators
+  , module Girella.Config
+  , module Girella.Conv
+  , module Girella.Misc
+  , module Girella.Operators
+  , module Girella.Order
+  , module Girella.Query
+  , module Girella.Range
+  , module Girella.ShowConstant
+  , module Girella.To
+  , module Girella.Transaction
   ) where
 
 import Control.Arrow
@@ -51,19 +51,19 @@ import Opaleye.QueryArr (Query, QueryArr)
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
 import Opaleye.Table (queryTable, required)
 
-import Silk.Opaleye.Aggregation
-import Silk.Opaleye.Combinators
-import Silk.Opaleye.Compat
-import Silk.Opaleye.Config
-import Silk.Opaleye.Conv
-import Silk.Opaleye.Misc
-import Silk.Opaleye.Operators
-import Silk.Opaleye.Order
-import Silk.Opaleye.Query
-import Silk.Opaleye.Range
-import Silk.Opaleye.ShowConstant
-import Silk.Opaleye.TH
-import Silk.Opaleye.To
-import Silk.Opaleye.Transaction
+import Girella.Aggregation
+import Girella.Combinators
+import Girella.Compat
+import Girella.Config
+import Girella.Conv
+import Girella.Misc
+import Girella.Operators
+import Girella.Order
+import Girella.Query
+import Girella.Range
+import Girella.ShowConstant
+import Girella.TH
+import Girella.To
+import Girella.Transaction
 
 {-# ANN module "HLint: ignore Use import/export shortcut" #-}

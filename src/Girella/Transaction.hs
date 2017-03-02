@@ -13,7 +13,7 @@
 --
 -- A function with a Transaction constraint can be composed with others to form a larger transaction.
 -- A MonadPool constraint indicates a complete transaction and can not be composed with others into a single transaction.
-module Silk.Opaleye.Transaction
+module Girella.Transaction
   ( Transaction (..)
   , MonadPool (..)
   , Q
@@ -38,8 +38,8 @@ import Control.Monad.Trans.Writer (WriterT)
 import Data.Pool (withResource)
 import qualified Database.PostgreSQL.Simple as PG
 
-import Silk.Opaleye.Config
-import Silk.Opaleye.Transaction.Q (Q (..), unsafeIOToQ)
+import Girella.Config
+import Girella.Transaction.Q (Q (..), unsafeIOToQ)
 
 -- | Composable transactions, this is the layer where queries are
 -- combined. Typically all sequences of queries should have a

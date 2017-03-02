@@ -2,7 +2,7 @@
     GeneralizedNewtypeDeriving
   , NoImplicitPrelude
   #-}
-module Silk.Opaleye.Transaction.Q
+module Girella.Transaction.Q
   ( Q (..)
   , unsafeIOToQ
   ) where

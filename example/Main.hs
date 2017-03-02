@@ -12,7 +12,7 @@ import Prelude.Compat
 import Control.Monad.Reader
 import qualified Data.UUID.V4 as UUID (nextRandom)
 
-import Silk.Opaleye
+import Girella
 import qualified User
 
 -- | Set up this example with

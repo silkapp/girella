@@ -1,4 +1,4 @@
-module Silk.Opaleye.Table
+module Girella.Table
   ( module Opaleye.Table
   , optionalColumn
   ) where

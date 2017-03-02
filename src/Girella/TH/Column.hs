@@ -3,7 +3,7 @@
   , TemplateHaskell
   , ViewPatterns
   #-}
-module Silk.Opaleye.TH.Column
+module Girella.TH.Column
   ( -- * TH end points
     mkId
   , makeColumnInstances
@@ -22,9 +22,9 @@ import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), 
 import Language.Haskell.TH
 import Opaleye.RunQuery (fieldQueryRunnerColumn)
 
-import Silk.Opaleye.Compat (QueryRunnerColumnDefault (..), classP_, dataDView, equalP_, instanceD_, newtypeDView, unsafeCoerceColumn)
-import Silk.Opaleye.Conv (Conv)
-import Silk.Opaleye.ShowConstant (PGRep, ShowConstant (..))
+import Girella.Compat (QueryRunnerColumnDefault (..), classP_, dataDView, equalP_, instanceD_, newtypeDView, unsafeCoerceColumn)
+import Girella.Conv (Conv)
+import Girella.ShowConstant (PGRep, ShowConstant (..))
 
 
 -- | Given a @newtype@ declaration with no type parameters and a single

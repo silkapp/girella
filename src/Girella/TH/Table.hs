@@ -4,7 +4,7 @@
   , TemplateHaskell
   , ViewPatterns
   #-}
-module Silk.Opaleye.TH.Table
+module Girella.TH.Table
   ( -- * TH End points
     makeTypes
   , makeTable
@@ -34,11 +34,11 @@ import Language.Haskell.TH.Syntax
 import Opaleye.Column (Column, Nullable)
 import Opaleye.Table (Table (Table))
 
-import Silk.Opaleye.Compat (instanceD_, dataDView)
-import Silk.Opaleye.Conv (Conv)
-import Silk.Opaleye.TH.Util (ambiguateName)
-import Silk.Opaleye.Table (optionalColumn)
-import Silk.Opaleye.To (To)
+import Girella.Compat (instanceD_, dataDView)
+import Girella.Conv (Conv)
+import Girella.TH.Util (ambiguateName)
+import Girella.Table (optionalColumn)
+import Girella.To (To)
 
 makeTypes :: Q [Dec] -> Q [Dec]
 makeTypes = (fmap concat . mapM makeType =<<)

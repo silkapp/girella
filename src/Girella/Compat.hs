@@ -1,5 +1,5 @@
 {-# LANGUAGE CPP #-}
-module Silk.Opaleye.Compat
+module Girella.Compat
   ( unsafeCoerceColumn
   , QueryRunnerColumnDefault (..)
   , PGOrd

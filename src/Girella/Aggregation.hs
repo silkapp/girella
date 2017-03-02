@@ -3,7 +3,7 @@
   , MultiParamTypeClasses
   , TypeFamilies
   #-}
-module Silk.Opaleye.Aggregation
+module Girella.Aggregation
   ( sum_
   , sumGrouped
   , sumNullable
@@ -49,8 +49,8 @@ import Opaleye.Column (Column, Nullable, toNullable)
 import Opaleye.PGTypes (PGArray, PGBool, PGText)
 import qualified Opaleye.Aggregate as A
 
-import Silk.Opaleye.Compat (PGOrd, unsafeCoerceColumn)
-import Silk.Opaleye.ShowConstant (PGRep, ShowConstant, safeCoerceFromRep, safeCoerceToRep)
+import Girella.Compat (PGOrd, unsafeCoerceColumn)
+import Girella.ShowConstant (PGRep, ShowConstant, safeCoerceFromRep, safeCoerceToRep)
 
 groupBy_ :: Aggregator (Column a) (Column a)
 groupBy_ = A.groupBy

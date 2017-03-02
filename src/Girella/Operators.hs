@@ -3,7 +3,7 @@
   , NoImplicitPrelude
   , TypeFamilies
   #-}
-module Silk.Opaleye.Operators
+module Girella.Operators
   ( (.==)
   , (.==?)
   , (./=)
@@ -51,8 +51,8 @@ import Opaleye.PGTypes (PGBool, PGText, pgBool)
 import qualified Opaleye.Column    as C (fromNullable, isNull, null)
 import qualified Opaleye.Operators as O
 
-import Silk.Opaleye.Compat (PGIntegral, PGOrd, PGString)
-import Silk.Opaleye.ShowConstant (ShowConstant (constant), PGRep, safeCoerceBinOp, safeCoerceFromRep, safeCoerceToRep, safelyWrapped)
+import Girella.Compat (PGIntegral, PGOrd, PGString)
+import Girella.ShowConstant (ShowConstant (constant), PGRep, safeCoerceBinOp, safeCoerceFromRep, safeCoerceToRep, safelyWrapped)
 
 infix 4 .==
 -- | Equality between columns, does not allow comparison on Nullable

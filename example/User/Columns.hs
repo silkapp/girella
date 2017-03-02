@@ -19,7 +19,7 @@ import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Data.UUID
 
-import Silk.Opaleye.TH
+import Girella.TH
 
 -- | We use a newtype to reperesent a foreign key
 newtype Id = Id { unId :: UUID }

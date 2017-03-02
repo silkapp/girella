@@ -1,5 +1,5 @@
 {-# LANGUAGE FlexibleContexts #-}
-module Silk.Opaleye.Misc
+module Girella.Misc
   ( fst3
   , snd3
   , trd3

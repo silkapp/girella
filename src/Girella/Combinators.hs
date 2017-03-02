@@ -3,7 +3,7 @@
   , FlexibleContexts
   , NoImplicitPrelude
   #-}
-module Silk.Opaleye.Combinators
+module Girella.Combinators
   ( where_
   , whereEq
   , innerJoinOn
@@ -29,9 +29,9 @@ import Opaleye.QueryArr
 import qualified Opaleye.Join      as J
 import qualified Opaleye.Operators as O
 
-import Silk.Opaleye.Operators
-import Silk.Opaleye.ShowConstant
-import Silk.Opaleye.TH
+import Girella.Operators
+import Girella.ShowConstant
+import Girella.TH
 
 -- | Composable version of restrict
 -- > where_ (\(c,u) -> Comment.userId c .== User.id' u) . (queryComment &&& queryUser)

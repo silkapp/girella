@@ -4,7 +4,7 @@
   , TypeFamilies
   , TypeSynonymInstances
   #-}
-module Silk.Opaleye.Conv (Conv (..)) where
+module Girella.Conv (Conv (..)) where
 
 import Data.CaseInsensitive
 import Data.Int

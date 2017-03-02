@@ -40,8 +40,8 @@ import Prelude.Compat hiding (id, (.))
 import Control.Category
 import Data.Text (Text)
 
-import Silk.Opaleye
-import Silk.Opaleye.TH
+import Girella
+import Girella.TH
 
 import User.Columns
 

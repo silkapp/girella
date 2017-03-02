@@ -1,18 +1,18 @@
-name:                silk-db-opaleye
-version:             0.4.0.1
-license:             OtherLicense
-synopsis:            Wrapper over Opaleye
-description:         Wrapper over Opaleye
-author:              Silk B.V.
-maintainer:          code@silk.co
-copyright:           2014 Silk B.V.
-category:            Silk
+name:                girella
+version:             1.0.0.0
+license:             BSD3
+synopsis:            Functional-relational mapping framework over Opaleye
+description:         Functional-relational mapping framework over Opaleye
+author:              Silk B.V., Adam Bergmark
+maintainer:          adam@bergmark.nl
+copyright:           2014-2016 Silk B.V., 2017 Adam Bergmark
+category:            Database
 build-type:          Simple
 cabal-version:       >=1.10
 
 source-repository head
   type:              git
-  location:          https://github.com/silkapp/silk-opaleye.git
+  location:          https://github.com/bergmark/girella.git
 
 executable example
   default-language:  Haskell2010
@@ -28,7 +28,7 @@ executable example
     , hslogger
     , mtl
     , mtl-compat
-    , silk-db-opaleye
+    , girella
     , text == 1.2.*
     , transformers
     , transformers-compat
@@ -39,29 +39,29 @@ library
   ghc-options:       -Wall
   hs-source-dirs:    src
   exposed-modules:
-    Silk.Opaleye
-    Silk.Opaleye.Aggregation
-    Silk.Opaleye.Combinators
-    Silk.Opaleye.Compat
-    Silk.Opaleye.Config
-    Silk.Opaleye.Conv
-    Silk.Opaleye.Json
-    Silk.Opaleye.Misc
-    Silk.Opaleye.Operators
-    Silk.Opaleye.Order
-    Silk.Opaleye.Query
-    Silk.Opaleye.Range
-    Silk.Opaleye.Run
-    Silk.Opaleye.ShowConstant
-    Silk.Opaleye.TH
-    Silk.Opaleye.TH.Column
-    Silk.Opaleye.TH.Table
-    Silk.Opaleye.Table
-    Silk.Opaleye.To
-    Silk.Opaleye.Transaction
+    Girella
+    Girella.Aggregation
+    Girella.Combinators
+    Girella.Compat
+    Girella.Config
+    Girella.Conv
+    Girella.Json
+    Girella.Misc
+    Girella.Operators
+    Girella.Order
+    Girella.Query
+    Girella.Range
+    Girella.Run
+    Girella.ShowConstant
+    Girella.TH
+    Girella.TH.Column
+    Girella.TH.Table
+    Girella.Table
+    Girella.To
+    Girella.Transaction
   other-modules:
-    Silk.Opaleye.Transaction.Q
-    Silk.Opaleye.TH.Util
+    Girella.Transaction.Q
+    Girella.TH.Util
   build-depends:
       base >= 4.6 && < 4.10
     , aeson-utils >= 0.2 && < 0.4

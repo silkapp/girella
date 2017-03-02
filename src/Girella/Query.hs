@@ -3,7 +3,7 @@
   , ImplicitParams
   , TypeFamilies
   #-}
-module Silk.Opaleye.Query
+module Girella.Query
   ( runInsert
   , runInsertReturning
   , runUpdate
@@ -38,11 +38,11 @@ import Opaleye.Table
 import qualified Opaleye.Manipulation as M (runDelete, runInsert, runInsertReturning, runUpdate, runUpdateEasy)
 import qualified Opaleye.RunQuery     as M (runQueryExplicit, runQueryFoldExplicit)
 
-import Silk.Opaleye.Compat (prettySrcLoc)
-import Silk.Opaleye.Conv
-import Silk.Opaleye.ShowConstant
-import Silk.Opaleye.TH
-import Silk.Opaleye.Transaction
+import Girella.Compat (prettySrcLoc)
+import Girella.Conv
+import Girella.ShowConstant
+import Girella.TH
+import Girella.Transaction
 
 -- | runInsert inside a Transaction
 runInsert :: Transaction m => Table columns columns' -> columns -> m ()

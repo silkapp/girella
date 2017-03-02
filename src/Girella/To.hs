@@ -1,5 +1,5 @@
 {-# LANGUAGE TypeFamilies #-}
-module Silk.Opaleye.To
+module Girella.To
   ( To
   , MapTo
   ) where
