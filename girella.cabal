@@ -64,7 +64,7 @@ library
     Girella.TH.Util
   build-depends:
       base >= 4.6 && < 4.10
-    , aeson-utils >= 0.2 && < 0.4
+    , aeson >= 1 && < 1.2
     , base-compat >= 0.8.2 && < 0.10
     , case-insensitive == 1.2.*
     , contravariant >= 1.2 && < 1.5

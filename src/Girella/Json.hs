@@ -15,10 +15,10 @@ module Girella.Json
   , makeJsonColumnInstances
   ) where
 
-import Data.Aeson.Utils
-import Data.String.Conversions
-import Data.Typeable
-import Language.Haskell.TH
+import Data.Aeson (FromJSON (..), Result (..), ToJSON (..), Value, decode, encode, fromJSON)
+import Data.String.Conversions (StrictText, cs)
+import Data.Typeable (Typeable)
+import Language.Haskell.TH (Dec, Name, Q)
 
 import Girella.TH
 
@@ -29,7 +29,7 @@ jsonToText :: Json -> StrictText
 jsonToText = cs . encode . unJson
 
 textToJson :: StrictText -> Maybe Json
-textToJson = decodeV . cs
+textToJson = decode . cs
 
 makeColumnInstances ''Json ''StrictText 'jsonToText 'textToJson
 
