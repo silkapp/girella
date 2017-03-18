@@ -1,10 +1,12 @@
 {-# LANGUAGE
-    DeriveDataTypeable
+    Arrows
+  , DeriveDataTypeable
   , FlexibleInstances
   , LambdaCase
   , MultiParamTypeClasses
   , NoImplicitPrelude
   , NoMonomorphismRestriction
+  , ScopedTypeVariables
   , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances
@@ -26,10 +28,16 @@ module User
   , updateEasy
   -- * Ordering
   , nameOrder
-  -- Running queries
+  -- * Running queries
   , runById
   , insertAndSelectAll
   , runInsertAndSelectAll
+  -- * Projection / Sub-view
+  , UserNameViewP (..)
+  , UserNameView
+  , UserNameViewH
+  , queryAllView
+  , queryAllViewSlower
   ) where
 
 -- Per convention we use 'id' and '(.)' 'from Control.Category' If you
@@ -194,3 +202,43 @@ insertAndSelectAll i n a mg = do
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
 runInsertAndSelectAll :: MonadPool m => Id -> Text -> Int -> Maybe Gender -> m [UserH]
 runInsertAndSelectAll i n a mg = runTransaction $ insertAndSelectAll i n a mg
+
+-- We can define a projection/sub-view of a table by simply defining a smaller data type and re-using the entire table definition.
+--
+-- Is it efficient to base our sub view query on the entire User
+-- table?
+-- The generated SQL will be of the form
+--
+-- >>> select id, name from (select * from users)
+--
+-- but Postgres will optimize this to exclude the columns we aren't
+-- using, you can verify this with an EXPLAIN ANALYZE.
+--
+-- If we instead would simply map @UserH -> MyUserNameView@ outside of 'QueryArr' postgres would
+makeTypes [d|
+    data UserNameView = UserNameView
+      { idView   :: Id
+      , nameView :: Text
+      } deriving Show
+  |]
+
+makeAdaptorAndInstance "pUserNameView" ''UserNameViewP
+
+-- Helper to allow us to make a view query out of any normal User
+-- query.
+--
+-- Note that exporting this may encourage to run queries such as in
+-- 'queryAllViewSlower' so we've left it un-exposed.
+toView :: UserP a b c d -> UserNameViewP a b
+toView u = UserNameView { idView = id' u, nameView = name u }
+
+queryAllView :: Query (To Column UserNameView)
+queryAllView = toView <$> queryAll
+
+-- Doing the query this way is not composable as we are in
+-- 'Transaction'. It's also less efficient as the mapping from the
+-- normal User type happens outside of Postgres.
+queryAllViewSlower :: Transaction m => m [UserNameViewH]
+queryAllViewSlower = do
+  r :: [UserH] <- runQuery queryAll
+  pure $ map toView r
