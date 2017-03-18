@@ -56,7 +56,7 @@ import User.Columns
 -- Here we define a data type for our table, each field has a haskell
 -- type that can map to opaleye types. This gives us the possibility
 -- to have a many-to-one mapping between haskell types and opaleye
--- types. For example, we want @User.Id@ to be separate from @Post.Id@
+-- types. For example, we want @User.Id@ to be separate from @Article.Id@
 -- even if they have the same database representation.
 --
 -- This generates two type aliases and one type:

@@ -20,6 +20,8 @@ executable example
   hs-source-dirs:    example
   main-is:           Main.hs
   other-modules:
+    Article
+    Article.Columns
     User
     User.Columns
   build-depends:

@@ -13,6 +13,7 @@ import Control.Monad.Reader
 import qualified Data.UUID.V4 as UUID (nextRandom)
 
 import Girella
+import qualified Article
 import qualified User
 
 -- | Set up this example with
@@ -53,8 +54,9 @@ runInReaderT = flip runReaderT
 -- run separately.
 doThings :: (MonadPool m, MonadIO m) => m ()
 doThings = do
-  i <- User.Id <$> liftIO UUID.nextRandom
-  people <- runTransaction $ myTransaction i
+  ui <- User.Id <$> liftIO UUID.nextRandom
+  ai <- Article.Id <$> liftIO UUID.nextRandom
+  people <- runTransaction $ myTransaction ui ai
   liftIO $ print people
 
 -- | A 'Transaction' form just that, a database Transaction. Note that
@@ -62,11 +64,12 @@ doThings = do
 -- multiple transations into one.
 --
 -- By combining these queries here we prevent them from running in isolation of each other.
-myTransaction :: Transaction m => User.Id -> m [User.UserH]
-myTransaction i = do
-  User.insert i "Aaron Aardvark" 12 (Just User.Male)
-  void $ User.update i "Baron Bardvark" 13
-  void $ User.updateEasy i "Baron Bardvark" 20
+myTransaction :: Transaction m => User.Id -> Article.Id -> m [User.UserH]
+myTransaction ui ai = do
+  User.insert ui "Aaron Aardvark" 12 (Just User.Male)
+  void $ User.update ui "Baron Bardvark" 13
+  void $ User.updateEasy ui "Baron Bardvark" 20
+  void $ Article.insert ai ui "My Great Story" "TBC"
   runQuery User.allByName
 
 -- | The Transformer stack, we need to stuff a Config somewhere in
