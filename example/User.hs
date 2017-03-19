@@ -46,7 +46,6 @@ module User
 import Prelude.Compat hiding (id, (.))
 
 import Control.Category
-import Data.Text (Text)
 
 import Girella
 import Girella.TH
@@ -84,10 +83,19 @@ import User.Columns
 -- the Haskell result values directly with the girella query
 -- functions.
 --
+-- All columns are by convention newtyped. You don't need to do this,
+-- and we didn't for age, but the rationale is that we'd like
+-- comparing e.g. a user name with an article title to cause a type
+-- error since such comparisons rarely makes sense.
+--
+-- The downside is the wrapping and unwrapping you have to do when you
+-- handle the DB code. Use your judgement but always lean towards more
+-- types ;-)
+--
 makeTypes [d|
     data User = User
       { id'    :: Id
-      , name   :: Text
+      , name   :: Name
       , age    :: Int
       , gender :: Nullable Gender
       } deriving Show
@@ -156,7 +164,7 @@ allByName = orderBy nameOrder queryAll
 runById :: Transaction m => Id -> m (Maybe UserH)
 runById = runQueryFirst . byId
 
-insert :: Transaction m => Id -> Text -> Int -> Maybe Gender -> m ()
+insert :: Transaction m => Id -> Name -> Int -> Maybe Gender -> m ()
 insert i n a mg =
   runInsert table psn
   where
@@ -168,7 +176,7 @@ insert i n a mg =
       , gender = Just $ maybeToNullable mg
       }
 
-update :: Transaction m => Id -> Text -> Int -> m Bool
+update :: Transaction m => Id -> Name -> Int -> m Bool
 update i n a = (> 0) <$> runUpdate table upd condition
   where
     upd :: To Column User -> To Maybe (To Column User)
@@ -181,7 +189,7 @@ update i n a = (> 0) <$> runUpdate table upd condition
     condition :: To Column User -> Column Bool
     condition p = id' p .== constant i
 
-updateEasy :: Transaction m => Id -> Text -> Int -> m Bool
+updateEasy :: Transaction m => Id -> Name -> Int -> m Bool
 updateEasy i n a = (> 0) <$> runUpdateEasy table upd condition
   where
     upd :: To Column User -> To Column User
@@ -194,13 +202,13 @@ updateEasy i n a = (> 0) <$> runUpdateEasy table upd condition
     condition p = id' p .== constant i
 
 -- Type sig can be generalized to Conv as above.
-insertAndSelectAll :: Transaction m => Id -> Text -> Int -> Maybe Gender -> m [UserH]
+insertAndSelectAll :: Transaction m => Id -> Name -> Int -> Maybe Gender -> m [UserH]
 insertAndSelectAll i n a mg = do
   insert i n a mg
   runQuery queryAll
 
 -- Usually no point in defining this function by itself, but it could form a larger transaction.
-runInsertAndSelectAll :: MonadPool m => Id -> Text -> Int -> Maybe Gender -> m [UserH]
+runInsertAndSelectAll :: MonadPool m => Id -> Name -> Int -> Maybe Gender -> m [UserH]
 runInsertAndSelectAll i n a mg = runTransaction $ insertAndSelectAll i n a mg
 
 -- We can define a projection/sub-view of a table by simply defining a smaller data type and re-using the entire table definition.
@@ -218,7 +226,7 @@ runInsertAndSelectAll i n a mg = runTransaction $ insertAndSelectAll i n a mg
 makeTypes [d|
     data UserNameView = UserNameView
       { idView   :: Id
-      , nameView :: Text
+      , nameView :: Name
       } deriving Show
   |]
 

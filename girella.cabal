@@ -22,6 +22,7 @@ executable example
   other-modules:
     Article
     Article.Columns
+    Joins
     User
     User.Columns
   build-depends:
@@ -32,6 +33,7 @@ executable example
     , mtl-compat
     , girella
     , text == 1.2.*
+    , time
     , transformers
     , transformers-compat
     , uuid

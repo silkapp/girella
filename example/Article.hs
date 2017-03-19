@@ -40,7 +40,7 @@ module Article
 import Prelude.Compat hiding (id, (.))
 
 import Control.Category
-import Data.Text (Text)
+import Data.Time
 
 import Girella
 import Girella.TH
@@ -52,9 +52,13 @@ import qualified User
 makeTypes [d|
     data Article = Article
       { id'      :: Id
-      , authorId :: User.Id
-      , title    :: Text
-      , content  :: Text
+      , authorId :: User.Id -- ^ We declare foreign keys declared by
+                            -- using another table's primary
+                            -- key. Having unique types for each
+                            -- primary key makes joins type safe!
+      , title    :: Title
+      , content  :: Content
+      , created  :: UTCTime
       } deriving Show
   |]
 
@@ -85,8 +89,8 @@ articlesByUserName = proc () -> do
 runById :: Transaction m => Id -> m (Maybe ArticleH)
 runById = runQueryFirst . byId
 
-insert :: Transaction m => Id -> User.Id -> Text -> Text -> m ()
-insert i a t c =
+insert :: Transaction m => Id -> User.Id -> Title -> Content -> UTCTime -> m ()
+insert i a t c u =
   runInsert table psn
   where
     psn :: To Maybe (To Column Article)
@@ -95,9 +99,10 @@ insert i a t c =
       , authorId = Just $ constant a
       , title    = Just $ constant t
       , content  = Just $ constant c
+      , created  = Just $ constant u
       }
 
-update :: Transaction m => Id -> Text -> Text -> m Bool
+update :: Transaction m => Id -> Title -> Content -> m Bool
 update i t c = (> 0) <$> runUpdate table upd condition
   where
     upd :: To Column Article -> To Maybe (To Column Article)
@@ -106,17 +111,17 @@ update i t c = (> 0) <$> runUpdate table upd condition
       , authorId = Just $ authorId p
       , title    = Just $ constant t
       , content  = Just $ constant c
+      , created  = Just $ created p
       }
     condition :: To Column Article -> Column Bool
     condition p = id' p .== constant i
 
-updateEasy :: Transaction m => Id -> Text -> Text -> m Bool
+updateEasy :: Transaction m => Id -> Title -> Content -> m Bool
 updateEasy i t c = (> 0) <$> runUpdateEasy table upd condition
   where
     upd :: To Column Article -> To Column Article
     upd p = p
-      { id'      = id' p
-      , authorId = authorId p
+      { authorId = authorId p
       , title    = constant t
       , content  = constant c
       }

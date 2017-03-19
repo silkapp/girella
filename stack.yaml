@@ -1,7 +1,8 @@
 resolver: lts-8.5
 packages:
 - '.'
-- haskell-opaleye/
+- location: haskell-opaleye/
+  extra-dep: true
 extra-deps: []
 flags: {}
 extra-package-dbs: []

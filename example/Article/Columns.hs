@@ -7,8 +7,13 @@
   , TypeFamilies
   , UndecidableInstances
   #-}
-module Article.Columns (Id (..)) where
+module Article.Columns
+  ( Id (..)
+  , Title (..)
+  , Content (..)
+  ) where
 
+import Data.Text (Text)
 import Data.Typeable (Typeable)
 import Data.UUID
 
@@ -19,3 +24,13 @@ newtype Id = Id { unId :: UUID }
   deriving (Show, Typeable)
 
 mkId ''Id
+
+newtype Title = Title { unTitle :: Text }
+  deriving Show
+
+mkId ''Title
+
+newtype Content = Content { unContent :: Text }
+  deriving Show
+
+mkId ''Content

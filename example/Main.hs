@@ -10,11 +10,13 @@ module Main (main) where
 import Prelude.Compat
 
 import Control.Monad.Reader
+import Data.Time
 import qualified Data.UUID.V4 as UUID (nextRandom)
 
 import Girella
 import qualified Article
 import qualified User
+import qualified Joins
 
 -- | Set up this example with
 -- > create database test;
@@ -56,21 +58,22 @@ doThings :: (MonadPool m, MonadIO m) => m ()
 doThings = do
   ui <- User.Id <$> liftIO UUID.nextRandom
   ai <- Article.Id <$> liftIO UUID.nextRandom
-  people <- runTransaction $ myTransaction ui ai
+  now <- liftIO getCurrentTime
+  people <- runTransaction $ myTransaction ui ai now
   liftIO $ print people
 
 -- | A 'Transaction' form just that, a database Transaction. Note that
 -- we don't run the transaction here, which is why you can combine
--- multiple transations into one.
---
--- By combining these queries here we prevent them from running in isolation of each other.
-myTransaction :: Transaction m => User.Id -> Article.Id -> m [User.UserH]
-myTransaction ui ai = do
-  User.insert ui "Aaron Aardvark" 12 (Just User.Male)
-  void $ User.update ui "Baron Bardvark" 13
-  void $ User.updateEasy ui "Baron Bardvark" 20
-  void $ Article.insert ai ui "My Great Story" "TBC"
-  runQuery User.allByName
+-- multiple 'Transaction's into one.
+myTransaction :: Transaction m => User.Id -> Article.Id -> UTCTime -> m [(User.UserH, To Maybe Article.ArticleH)]
+myTransaction ui ai created = do
+  User.insert ui (User.Name "Aaron Aardvark") 12 (Just User.Male)
+  void $ User.update ui (User.Name "Baron Bardvark") 13
+  void $ User.updateEasy ui (User.Name "Baron Bardvark") 20
+  void $ Article.insert ai ui (Article.Title "My Great Story") (Article.Content "TBC") created
+  _ :: [User.UserH] <- runQuery User.allByName
+  _ :: [Article.ArticleH] <- runQuery Article.allByTitle
+  runQuery Joins.usersWithLastArticle
 
 -- | The Transformer stack, we need to stuff a Config somewhere in
 -- there to run queries.

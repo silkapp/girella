@@ -10,6 +10,7 @@
 module User.Columns
   ( Id (..)
   , Gender (..)
+  , Name (..)
   ) where
 
 -- Per convention we use 'id' and '(.)' 'from Control.Category' If you
@@ -99,3 +100,11 @@ textToGender = \case
 -- > instance Conv Gender
 --
 makeColumnInstances ''Gender ''Text 'genderToText 'textToGender
+
+-- | By convention we treat each column as a distinct types since we
+-- don't want to mix them by accident.
+newtype Name = Name { unName :: Text }
+  deriving Show
+mkId ''Name
+
+-- 'Age' is left as an 'Int' to give an example without newtypes.
