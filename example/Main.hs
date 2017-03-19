@@ -73,7 +73,8 @@ myTransaction ui ai created = do
   void $ Article.insert ai ui (Article.Title "My Great Story") (Article.Content "TBC") created
   _ :: [User.UserH] <- runQuery User.allByName
   _ :: [Article.ArticleH] <- runQuery Article.allByTitle
-  runQuery Joins.usersWithLastArticle
+  -- TODO: Why is runQueryInternal needed for this to typecheck?
+  runQueryInternal Joins.usersWithLastArticle
 
 -- | The Transformer stack, we need to stuff a Config somewhere in
 -- there to run queries.

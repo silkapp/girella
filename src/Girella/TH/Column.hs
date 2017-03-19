@@ -17,6 +17,7 @@ import Prelude.Compat
 
 import Control.Monad ((<=<))
 import Data.Data (Typeable)
+import Data.Maybe (Maybe)
 import Data.String.Conversions (StrictByteString, cs)
 import Database.PostgreSQL.Simple.FromField (Conversion, Field, FromField (..), ResultError (..), returnError)
 import Language.Haskell.TH
@@ -60,7 +61,7 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
   tvars <- getTyVars tyName
   let predCond = map (classP_ (''Typeable) . (:[])) tvars
   let outterTy = foldl AppT (ConT tyName) tvars
-  pure . map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ [conv | convInstance]
+  pure . map ($ (predCond, outterTy)) $ [fromFld, pgRep, showConst, queryRunnerColumn] ++ if convInstance then conv else []
   where
     fromFld :: ([Pred], Type) -> Dec
     fromFld (predCond, outterTy)
@@ -103,8 +104,11 @@ makeColumnInstancesInternal tyName innerTy toDb fromDb convInstance = do
             'queryRunnerColumnDefault
             [ Clause [] (NormalB $ VarE 'fieldQueryRunnerColumn) [] ]
           ]
-    conv :: ([Pred], Type) -> Dec
-    conv (_, outerTy) = instanceD_ [] (ConT ''Conv `AppT` outerTy) []
+    conv :: [([Pred], Type) -> Dec]
+    conv = map (. snd)
+      [ \outerTy -> instanceD_ [] (ConT ''Conv `AppT` outerTy) []
+      , \outerTy -> instanceD_ [] (ConT ''Conv `AppT` (ConT ''Maybe `AppT` outerTy)) []
+      ]
 
 getTyVars :: Name -> Q [Type]
 getTyVars n = do

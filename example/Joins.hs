@@ -1,13 +1,10 @@
 {-# LANGUAGE
     Arrows
-  , DeriveDataTypeable
   , FlexibleInstances
-  , LambdaCase
   , MultiParamTypeClasses
   , NoImplicitPrelude
   , NoMonomorphismRestriction
   , ScopedTypeVariables
-  , TemplateHaskell
   , TypeFamilies
   , UndecidableInstances
   #-}

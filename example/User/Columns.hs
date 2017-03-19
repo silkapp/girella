@@ -1,5 +1,6 @@
 {-# LANGUAGE
     DeriveDataTypeable
+  , FlexibleInstances
   , LambdaCase
   , MultiParamTypeClasses
   , OverloadedStrings
