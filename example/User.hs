@@ -40,8 +40,10 @@ module User
   , queryAllViewSlower
   ) where
 
--- Per convention we use 'id' and '(.)' 'from Control.Category' If you
--- don't want this, use 'returnA' and '<<<' respectively instead.
+-- Per convention we use 'Control.Category.id' and
+-- 'Control.Category.(.)' from 'Control.Category'. If you don't want
+-- to do this, use 'Control.Arrow.returnA' and 'Control.Arrow.(<<<)'
+-- respectively instead.
 
 import Prelude.Compat hiding (id, (.))
 
@@ -56,23 +58,25 @@ import User.Columns
 -- type that can map to opaleye types. This gives us the possibility
 -- to have a many-to-one mapping between haskell types and opaleye
 -- types. For example, we want @User.Id@ to be separate from @Article.Id@
--- even if they have the same database representation.
+-- when we write queries even if they have the same database
+-- representation.
 --
 -- This generates two type aliases and one type:
 --
--- You normally don't have to use the type 'UserP' at all.
-
--- > data UserP a b c d = User { id' :: a, name' :: b, age :: c, gender :: d }
+-- You normally don't have to use the type 'UserP' directly.
 --
--- The Opaleye type of the table, this is is what you'll use when writing queries.
--- Optional fields are 'Nullable' here since SQL doesn't have proper 'Maybe's.
+-- > data UserP a b c d = User { id' :: a, name :: b, age :: c, gender :: d }
 --
 -- > type User  = UserP Id String Int (Nullable Gender)
 --
+-- 'User' is the Opaleye type of the table, this is is what you'll use
+-- when writing queries. Optional fields are 'Nullable' here since
+-- SQL doesn't have proper 'Maybe's, there is no way to represent @Just Nothing@.
+--
 -- > type UserH = UserP Id String Int (Maybe Gender)
 --
--- The Haskell type you get if running a query retuns a user, Nullable
--- is mapped to a Maybe so it's usable.
+-- 'UserH' is the Haskell type you get as the result if running a
+-- query retuns a user, 'Nullable' is mapped to a 'Maybe'.
 --
 -- We also get a type family instance for 'To' which allows us to say
 -- things like @To Maybe PersonH@ or @To Column Person@ to wrap each field in a type.
@@ -102,8 +106,8 @@ makeTypes [d|
   |]
 
 -- | This is a product-profunctor TH splice that opaleye needs, you
--- don't need to understand what this does to use girella or opaleye,
--- but feel free to dig in.
+-- don't really need to understand what this does to use girella, but
+-- see the opaleye documentation if you are interested.
 makeAdaptorAndInstance "pUser" ''UserP
 
 -- | Here we make a table definition for our type by giving it the
@@ -113,14 +117,14 @@ makeAdaptorAndInstance "pUser" ''UserP
 -- This currently makes all columns nullable for inserts and updates
 -- since it's the most flexible option.
 --
--- This will produce a `table' which is the only entry-point we have
+-- This will produce a @table@ which is the only entry-point we have
 -- for working with the table.
 makeTable "people" 'pUser ''UserP
 
 -- | The simplest query, @select * from users@
 --
 -- This query can be reused by all queries referencing the users
--- table. By convention we only allow one call to `queryTable` per
+-- table. By convention we only allow one call to @table@ per
 -- table to make it clear who /owns/ the schema.
 --
 -- @Query a = QueryArr () a@ means have a full-fledged query that
